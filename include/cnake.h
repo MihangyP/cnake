@@ -1,5 +1,4 @@
-#ifndef CNAKE_H
-#define CNAKE_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +16,33 @@
 
 // TODO: implement my own hash table
 
+typedef struct s_color t_color;
+// Primary Colors, inspired by raylib's colors
+#define LIGHTGRAY	(t_color){200, 200, 200, 255}
+#define RED			(t_color){230, 41, 55, 255} 
+#define DARKGRAY	(t_color){80, 80, 80, 255} 
+#define YELLOW		(t_color){253, 249, 0, 255} 
+#define GOLD		(t_color){255, 203, 0, 255} 
+#define ORANGE		(t_color){255, 161, 0, 255} 
+#define PINK		(t_color){255, 109, 194, 255} 
+#define MAROON		(t_color){190, 33, 55, 255} 
+#define GREEN		(t_color){0, 228, 48, 255} 
+#define LIME		(t_color){0, 158, 47, 255} 
+#define DARKGREEN	(t_color){0, 117, 44, 255} 
+#define SKYBLUE		(t_color){102, 191, 255, 255} 
+#define BLUE		(t_color){0, 121, 241, 255} 
+#define DARKBLUE	(t_color){0, 82, 172, 255} 
+#define PURPLE		(t_color){200, 122, 255, 255} 
+#define VIOLET		(t_color){135, 60, 190, 255} 
+#define DARKPURPLE	(t_color){112, 31, 126, 255} 
+#define BEIGE		(t_color){211, 176, 131, 255} 
+#define BROWN		(t_color){127, 106, 79, 255} 
+#define DARKBROWN	(t_color){76, 63, 47, 255} 
+#define WHITE		(t_color){255, 255, 255, 255} 
+#define BLACK		(t_color){0, 0, 0, 255}
+#define MAGENTA		(t_color){255, 0, 255, 255}
+#define DONTOWHITE	(t_color){242, 242, 242, 255} 
+
 typedef enum
 {
 	INFO,
@@ -33,13 +59,13 @@ typedef enum
 	RIGHT
 }	t_direction;
 
-typedef struct
+struct s_color
 {
 	unsigned char	r;
 	unsigned char	g;
 	unsigned char	b;
 	unsigned char	a;
-}	t_color;
+};
 
 typedef struct s_list
 {
@@ -99,5 +125,3 @@ void	list_print(t_list *list);
 // shapes
 void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2);
 void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size);
-
-#endif
