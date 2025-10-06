@@ -11,8 +11,8 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 
-#define W_WIDTH 800
-#define W_HEIGHT 600
+#define W_WIDTH 600
+#define W_HEIGHT W_WIDTH
 
 // TODO: implement my own hash table
 
@@ -95,8 +95,6 @@ typedef struct
 	int		bpp;
 	int		width;
 	int		height;
-	int		type;
-	int		format;
 	char	*data;
 }	t_img;
 
@@ -109,6 +107,7 @@ typedef struct
 	Visual	*visual;
 	int		depth;
 	Atom	wm_delete_window;
+	t_img	*img;
 }	t_data;
 
 char	*itoa(int integer);
@@ -123,5 +122,15 @@ void	list_free(t_list *list);
 void	list_print(t_list *list);
 
 // shapes
-void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2);
+void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color);
 void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size);
+
+// rgba
+int		rgba_to_int(t_color color);
+t_color	int_to_rgba(int color);
+
+// color pixel
+void	color_pixel(t_img img, int x, int y, int color);
+// image
+void	*new_image(t_data *data, int width, int height);
+void	put_buffer_to_window(t_data *data);

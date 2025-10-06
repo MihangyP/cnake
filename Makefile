@@ -1,5 +1,5 @@
 NAME = cnake
-SRC_FILES := cnake.c itoa.c trace_log.c list.c shapes.c
+SRC_FILES := cnake.c itoa.c trace_log.c list.c shapes.c rgba.c
 SRC_FILES := $(addprefix src/, $(SRC_FILES))
 OBJ_FILES = $(SRC_FILES:.c=.o)
 HEADER_FILES := cnake.h

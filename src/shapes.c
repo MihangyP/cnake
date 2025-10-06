@@ -1,6 +1,6 @@
 #include "cnake.h"
 
-void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2)
+void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color)
 {
 	float		dx;
 	float		dy;
@@ -18,7 +18,7 @@ void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2)
 	int i = 0;
 	while (i < step) {
 		if (p1.x >= 0 && p1.x < W_WIDTH && p1.y >= 0 && p1.y < W_HEIGHT)
-			XDrawPoint(data->display, data->window, data->gc, p1.x, p1.y);
+			color_pixel(*data->img, p1.x, p1.y, rgba_to_int(color));
 		p1.x += inc_x;
 		p1.y += inc_y;
 		++i;
