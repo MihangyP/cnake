@@ -7,6 +7,29 @@ void	trace_log(t_log_level log_level, const char *format, ...)
 	int		fd = 1;;
 	
 	if (log_level == WARNING || log_level == ERROR) fd = 2;
+	switch (log_level) {
+		case INFO: {
+			const char *log = "INFO: ";
+			write(fd, log, strlen(log));
+			break;
+		}
+		case DEBUG: {
+			const char *log = "DEBUG: ";
+			write(fd, log, strlen(log));
+			break;
+		}
+		case WARNING: {
+			const char *log = "WARNING: ";
+			write(fd, log, strlen(log));
+			break;
+		}
+		case ERROR: {
+			const char *log = "ERROR: ";
+			write(fd, log, strlen(log));
+			break;
+		}
+	}
+
 	va_start(ap, format);
 	while (*format) {
 		if (*format != '%')	{

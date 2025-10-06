@@ -37,5 +37,6 @@ char	*itoa(int integer)
 		result[0] = '-';
 	}
 	insert_digit(result, integer, digits);
+	result[digits] = '\0';
 	return (result);
 }

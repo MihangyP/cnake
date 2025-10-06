@@ -1,5 +1,5 @@
 NAME = cnake
-SRC_FILES := cnake.c itoa.c trace_log.c
+SRC_FILES := cnake.c itoa.c trace_log.c list.c shapes.c
 SRC_FILES := $(addprefix src/, $(SRC_FILES))
 OBJ_FILES = $(SRC_FILES:.c=.o)
 HEADER_FILES := cnake.h
@@ -7,7 +7,7 @@ HEADER_FILES := $(addprefix include/, $(HEADER_FILES))
 CC = cc -g
 CFLAGS = -Wall -Wextra # -Werror
 INCLUDING = -I./include
-LINKING = 
+LINKING = -lX11
 RM = rm -rf
 BUILD_FOLDER = ./build
 
