@@ -46,11 +46,8 @@ void	init_window(t_data *data, size_t width, size_t height, const char *title,
 
 void	close_window(t_data *data)
 {
-	// destroy image
 	XDestroyImage(data->img->image);
 	free(data->img);
-	//
-
 	XFreeGC(data->display, data->gc);
 	XDestroyWindow(data->display, data->window);
 	XCloseDisplay(data->display);
@@ -72,7 +69,6 @@ void	draw_grid(t_data *data, t_color color)
 		draw_line(data, (t_vector2){0, y}, (t_vector2){W_WIDTH, y}, color);
 		y += y_size;
 	}
-	put_buffer_to_window(data);
 }
 
 int	get_random_number(int min, int max)
@@ -110,6 +106,7 @@ void	*new_image(t_data *data, int width, int height)
 	img->width = width;
 	img->height = height;
 	img->pix = XCreatePixmap(data->display, data->root, width, height, data->depth);
+	XFlush(data->display);
 	return (img);
 }
 
@@ -127,6 +124,7 @@ void	put_buffer_to_window(t_data *data)
 			data->img->width, data->img->height);
 	XCopyArea(data->display, data->img->pix, data->window, data->gc,
 			0, 0, data->img->width, data->img->height, 0, 0);
+	XFlush(data->display);
 }
 
 void	clear_background(t_data *data, t_color color)
@@ -136,10 +134,8 @@ void	clear_background(t_data *data, t_color color)
 		for (; x < W_WIDTH; ++x)
 			color_pixel(*data->img, x, y, rgba_to_int(color));
 	}
-	put_buffer_to_window(data);
 }
 
-// TODO: Fix blinking bug
 int	main(void)
 {
 	t_data	data;
@@ -164,6 +160,8 @@ int	main(void)
 		}
 		clear_background(&data, (t_color){24, 24, 24, 255});
 		draw_grid(&data, DONTOWHITE);
+		draw_rectangle(&data, (t_vector2){W_WIDTH/2, W_HEIGHT/2}, (t_vector2){50, 50}, GOLD);
+		put_buffer_to_window(&data);
 	}
 	close_window(&data);
 	return (0);

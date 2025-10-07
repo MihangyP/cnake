@@ -1,4 +1,5 @@
-NAME = cnake
+PROGRAM_NAME = cnake
+NAME = $(BUILD_FOLDER)/$(PROGRAM_NAME)
 SRC_FILES := cnake.c itoa.c trace_log.c list.c shapes.c rgba.c
 SRC_FILES := $(addprefix src/, $(SRC_FILES))
 OBJ_FILES = $(SRC_FILES:.c=.o)
@@ -15,7 +16,7 @@ all: $(NAME)
 
 $(NAME): $(SRC_FILES) $(HEADER_FILES)
 	mkdir -p $(BUILD_FOLDER)
-	$(CC) $(CFLAGS) $(INCLUDING) $(SRC_FILES) -o $(BUILD_FOLDER)/$(NAME) $(LINKING)
+	$(CC) $(CFLAGS) $(INCLUDING) $(SRC_FILES) -o $(NAME) $(LINKING)
 
 clean:
 	$(RM) $(OBJ_FILES)

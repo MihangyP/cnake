@@ -123,7 +123,7 @@ void	list_print(t_list *list);
 
 // shapes
 void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color);
-void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size);
+void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size, t_color color);
 
 // rgba
 int		rgba_to_int(t_color color);

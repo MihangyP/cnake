@@ -25,7 +25,7 @@ void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color)
 	}
 }
 
-void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size)
+void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size, t_color color)
 {
 	t_vector2	end;
 
@@ -36,9 +36,9 @@ void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size)
 	for (; start.y <= end.y; ++start.y) {
 		if (start.y >= 0 || start.y < W_WIDTH) {
 			start.x = tmp;
-			for (; start.x <= end.y; ++start.x) {
+			for (; start.x <= end.x; ++start.x) {
 				if (start.x >= 0 || start.x < W_HEIGHT)
-					XDrawPoint(data->display, data->window, data->gc, start.x, start.y);
+					color_pixel(*data->img, start.x, start.y, rgba_to_int(color));
 			}
 		}
 	}
