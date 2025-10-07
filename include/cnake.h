@@ -13,6 +13,8 @@
 
 #define W_WIDTH 600
 #define W_HEIGHT W_WIDTH
+#define NUMBER_OF_SQUARE 20
+#define SQUARE_SIZE (W_WIDTH / NUMBER_OF_SQUARE)
 
 // TODO: implement my own hash table
 
@@ -124,6 +126,8 @@ void	list_print(t_list *list);
 // shapes
 void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color);
 void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size, t_color color);
+void	draw_circle(t_data *data, t_vector2 center, int radius, t_color color);
+void	draw_triangle(t_data *data, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color);
 
 // rgba
 int		rgba_to_int(t_color color);

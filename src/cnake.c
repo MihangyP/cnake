@@ -55,19 +55,16 @@ void	close_window(t_data *data)
 
 void	draw_grid(t_data *data, t_color color)
 {
-	size_t	grid_size = 20;
-	size_t	x_size = W_WIDTH / grid_size;
-	size_t	y_size = W_HEIGHT / grid_size;
-	size_t	x = x_size;
-	size_t 	y = y_size;
+	size_t	x = SQUARE_SIZE;
+	size_t 	y = SQUARE_SIZE;
 
 	while (x <= W_WIDTH) {
 		draw_line(data, (t_vector2){x, 0}, (t_vector2){x, W_HEIGHT}, color);
-		x += x_size;
+		x += SQUARE_SIZE;
 	}
 	while (y <= W_HEIGHT) {
 		draw_line(data, (t_vector2){0, y}, (t_vector2){W_WIDTH, y}, color);
-		y += y_size;
+		y += SQUARE_SIZE;
 	}
 }
 
@@ -136,6 +133,16 @@ void	clear_background(t_data *data, t_color color)
 	}
 }
 
+// TODO: draw_triangle
+/** .  draw_triangle(data, (t_vector2){W_WIDTH/2, 10}, (t_vector2){300, 100}, (t_vector2){500, 100}, RED);  . **/
+// TODO: make player_position random
+void	render(t_data *data)
+{
+	draw_grid(data, DONTOWHITE);
+	draw_rectangle(data, (t_vector2){W_WIDTH/2, W_HEIGHT/2}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
+	put_buffer_to_window(data);
+}
+
 int	main(void)
 {
 	t_data	data;
@@ -149,19 +156,15 @@ int	main(void)
 			XNextEvent(data.display, &event);
 			if (event.type == KeyPress) {
 				KeySym keysym = XLookupKeysym(&event.xkey, 0);
-				if (keysym == XK_Escape) {
+				if (keysym == XK_Escape)
 					window_should_close = true;
-				}
 			} else if (event.type == ClientMessage) {
-				if ((Atom)event.xclient.data.l[0] == data.wm_delete_window) {
+				if ((Atom)event.xclient.data.l[0] == data.wm_delete_window)
 					window_should_close = true;
-				}
 			}
 		}
 		clear_background(&data, (t_color){24, 24, 24, 255});
-		draw_grid(&data, DONTOWHITE);
-		draw_rectangle(&data, (t_vector2){W_WIDTH/2, W_HEIGHT/2}, (t_vector2){50, 50}, GOLD);
-		put_buffer_to_window(&data);
+		render(&data);
 	}
 	close_window(&data);
 	return (0);

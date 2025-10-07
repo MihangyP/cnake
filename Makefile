@@ -8,7 +8,7 @@ HEADER_FILES := $(addprefix include/, $(HEADER_FILES))
 CC = cc -g
 CFLAGS = -Wall -Wextra # -Werror
 INCLUDING = -I./include
-LINKING = -lX11
+LINKING = -lX11 -lm
 RM = rm -rf
 BUILD_FOLDER = ./build
 
