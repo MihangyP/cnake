@@ -14,7 +14,7 @@
 
 #define W_WIDTH 600
 #define W_HEIGHT W_WIDTH
-#define NUMBER_OF_SQUARE 20
+#define NUMBER_OF_SQUARE 30
 #define SQUARE_SIZE (W_WIDTH / NUMBER_OF_SQUARE)
 
 // TODO: implement my own hash table
@@ -80,6 +80,7 @@ typedef struct {
 typedef struct {
 	t_vector2 	position;
 	t_direction direction;
+	int			nb_collision;
 }	t_turn;
 
 typedef struct {
@@ -109,6 +110,7 @@ typedef struct {
 	Atom	wm_delete_window;
 	t_img	*img;
 	t_list	*player;
+	t_vector2 collectible_position;
 }	t_data;
 
 char	*itoa(int integer);
@@ -120,6 +122,7 @@ void	list_add_front(t_list **list, t_list *new_element);
 void	list_add_back(t_list **list, t_list *new_element);
 t_list	*list_last(t_list *list);
 void	list_free(t_list *list);
+void	list_del_front(t_list **list);
 size_t	list_size(t_list *list);
 void	list_print(t_list *list);
 
@@ -132,6 +135,7 @@ void	draw_triangle(t_data *data, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_col
 // rgba
 int		rgba_to_int(t_color color);
 t_color	int_to_rgba(int color);
+t_color	color_alpha(t_color color, float alpha);
 
 // color pixel
 void	color_pixel(t_img img, int x, int y, int color);

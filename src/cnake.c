@@ -153,6 +153,7 @@ void	render(t_data *data)
 		draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
 		curr = curr->next;
 	}
+	draw_rectangle(data, data->collectible_position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
 	put_buffer_to_window(data);
 }
 
@@ -206,10 +207,7 @@ void	add_cube(t_data *data)
 	list_add_back(&data->player, new);
 }
 
-// TODO: draw_triangle
-/** .  draw_triangle(data, (t_vector2){W_WIDTH/2, 10}, (t_vector2){300, 100}, (t_vector2){500, 100}, RED);  . **/
 // TODO: remove conditional jumps on rendering
-// TODO: FPS
 int	main(void)
 {
 	t_data	data;
@@ -223,7 +221,15 @@ int	main(void)
 	add_cube(&data);
 	add_cube(&data);
 
-	t_list	*to_turns = NULL;
+	t_list *to_turns = NULL;
+
+	// collecible
+	int	tab[NUMBER_OF_SQUARE];
+	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
+		tab[i] = j;
+	data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	//
 
 	XEvent event;
 	double start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
@@ -243,6 +249,7 @@ int	main(void)
 						turn->position.x = cube->position.x;
 						turn->position.y = cube->position.y;
 						turn->direction = LEFT;
+						turn->nb_collision = 0;
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					} else if (keysym == XK_Right && cube->direction != RIGHT && cube->direction != LEFT) {
@@ -252,6 +259,7 @@ int	main(void)
 						turn->position.x = cube->position.x;
 						turn->position.y = cube->position.y;
 						turn->direction = RIGHT;
+						turn->nb_collision = 0;
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					} else if (keysym == XK_Up && cube->direction != UP && cube->direction != DOWN) {
@@ -261,6 +269,7 @@ int	main(void)
 						turn->position.x = cube->position.x;
 						turn->position.y = cube->position.y;
 						turn->direction = UP;
+						turn->nb_collision = 0;
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					} else if (keysym == XK_Down && cube->direction != DOWN && cube->direction != UP ) {
@@ -270,6 +279,7 @@ int	main(void)
 						turn->position.x = cube->position.x;
 						turn->position.y = cube->position.y;
 						turn->direction = DOWN;
+						turn->nb_collision = 0;
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					}
@@ -280,27 +290,30 @@ int	main(void)
 			}
 		}
 	
-		t_list *curr = data.player;
-		while (curr) {
-			t_cube *cube = (t_cube *)curr->content;
-			if (to_turns) {
-				t_list *curr2 = to_turns;
-				while (curr2) {
-					t_turn *turn = (t_turn *)curr2->content;
-					if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
-						cube->direction = turn->direction;
-						break ;
-					}
-					curr2 = curr2->next;
-				}
-			}
-			curr = curr->next;
-		}
-
 		clear_background(&data, (t_color){24, 24, 24, 255});
 		// Update data
 		double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-		if (end - start >= 300) {
+		if (end - start >= 200) {
+			t_list *curr = data.player;
+			while (curr) {
+				t_cube *cube = (t_cube *)curr->content;
+				if (to_turns) {
+					t_list *curr2 = to_turns;
+					while (curr2) {
+						t_turn *turn = (t_turn *)curr2->content;
+						if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
+							++turn->nb_collision;
+							cube->direction = turn->direction;
+							if (turn->nb_collision == (int)list_size(data.player))
+								list_del_front(&to_turns);
+							break ;
+						}
+						curr2 = curr2->next;
+					}
+				}
+				curr = curr->next;
+			}
+
 			curr = data.player;
 			for (; curr; curr = curr->next) {
 				t_cube	*cube = (t_cube *)curr->content;

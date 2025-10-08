@@ -45,6 +45,13 @@ void	list_free(t_list *list)
 	}
 }
 
+void	list_del_front(t_list **list)
+{
+	t_list	*tmp = *list;
+	*list = (*list)->next;
+	free(tmp);
+}
+
 size_t	list_size(t_list *list)
 {
 	size_t	size = 0;
