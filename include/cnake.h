@@ -46,51 +46,49 @@ typedef struct s_color t_color;
 #define MAGENTA		(t_color){255, 0, 255, 255}
 #define DONTOWHITE	(t_color){242, 242, 242, 255} 
 
-typedef enum
-{
+typedef enum {
 	INFO,
 	DEBUG,
 	WARNING,
 	ERROR
 }	t_log_level;
 
-typedef enum
-{
+typedef enum {
 	UP,
 	DOWN,
 	LEFT,
 	RIGHT
 }	t_direction;
 
-struct s_color
-{
+struct s_color {
 	unsigned char	r;
 	unsigned char	g;
 	unsigned char	b;
 	unsigned char	a;
 };
 
-typedef struct s_list
-{
+typedef struct s_list {
 	void			*content;
 	struct s_list	*next;
 }	t_list;
 
-typedef struct
-{
+typedef struct {
 	float x;
 	float y;
 }	t_vector2;
 
-typedef struct
-{
+typedef struct {
+	t_vector2 	position;
+	t_direction direction;
+}	t_turn;
+
+typedef struct {
 	t_vector2	position;
 	t_direction	direction;
 	int			color;
 }	t_cube;
 
-typedef struct
-{
+typedef struct {
 	XImage	*image;
 	Pixmap	pix;
 	GC		gc;
@@ -101,8 +99,7 @@ typedef struct
 	char	*data;
 }	t_img;
 
-typedef struct
-{
+typedef struct {
 	Display	*display;
 	Window	window;
 	GC		gc;
@@ -111,7 +108,7 @@ typedef struct
 	int		depth;
 	Atom	wm_delete_window;
 	t_img	*img;
-	t_vector2	player_position;
+	t_list	*player;
 }	t_data;
 
 char	*itoa(int integer);
@@ -123,6 +120,7 @@ void	list_add_front(t_list **list, t_list *new_element);
 void	list_add_back(t_list **list, t_list *new_element);
 t_list	*list_last(t_list *list);
 void	list_free(t_list *list);
+size_t	list_size(t_list *list);
 void	list_print(t_list *list);
 
 // shapes

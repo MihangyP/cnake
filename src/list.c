@@ -45,6 +45,16 @@ void	list_free(t_list *list)
 	}
 }
 
+size_t	list_size(t_list *list)
+{
+	size_t	size = 0;
+	while (list) {
+		++size;
+		list = list->next;
+	}
+	return (size);
+}
+
 void	list_print(t_list *list)
 {
 	for (; list; list = list->next)

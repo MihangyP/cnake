@@ -48,6 +48,7 @@ void	trace_log(t_log_level log_level, const char *format, ...)
 				case 'd': {
 					string = itoa(va_arg(ap, int));	
 					write(fd, string, strlen(string));
+					free(string);
 				} break;
 			}
 		}

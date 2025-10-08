@@ -42,19 +42,25 @@ void	init_window(t_data *data, size_t width, size_t height, const char *title,
 	XMapWindow(data->display, data->window);
 	data->img = new_image(data, W_WIDTH, W_HEIGHT);
 	/** .  XFlush(data->display);  . **/
-	trace_log(INFO, "Window Initialise succesfully");
-	trace_log(INFO, "   WIDTH: %d", W_WIDTH);
-	trace_log(INFO, "   HEIGHT: %d", W_HEIGHT);
+	trace_log(INFO, "Window initialised succesfully");
+	trace_log(INFO, "   > Window size: %d x %d", W_WIDTH, W_HEIGHT);
 }
 
 void	close_window(t_data *data)
 {
+	t_list *curr = data->player;
+	while (curr) {
+		t_list *tmp = curr;
+		curr = curr->next;
+		free(tmp->content);
+		free(tmp);
+	}
 	XDestroyImage(data->img->image);
 	free(data->img);
 	XFreeGC(data->display, data->gc);
 	XDestroyWindow(data->display, data->window);
 	XCloseDisplay(data->display);
-	trace_log(INFO, "Window Closed succesfully");
+	trace_log(INFO, "Window closed succesfully");
 }
 
 void	draw_grid(t_data *data, t_color color)
@@ -137,30 +143,90 @@ void	clear_background(t_data *data, t_color color)
 	}
 }
 
-// TODO: draw_triangle
-/** .  draw_triangle(data, (t_vector2){W_WIDTH/2, 10}, (t_vector2){300, 100}, (t_vector2){500, 100}, RED);  . **/
-// TODO: make player_position random
 void	render(t_data *data)
 {
 	draw_grid(data, DONTOWHITE);
-	draw_rectangle(data, data->player_position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
+	t_list *curr = data->player;
+	t_cube *cube  = NULL;
+	while (curr) {
+		cube = (t_cube *)curr->content;
+		draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
+		curr = curr->next;
+	}
 	put_buffer_to_window(data);
 }
 
+void	init_player(t_data *data)
+{
+	int	tab[NUMBER_OF_SQUARE];
+	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
+		tab[i] = j;
+
+	t_cube	*head = malloc(sizeof(t_cube));
+	if (!head) {
+		trace_log(ERROR, "Malloc error");
+		// Return an error
+	}
+	srand(time(NULL));
+	head->position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	head->position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	head->direction = get_random_number(UP, RIGHT);
+	t_list	*new = list_new(head);
+	list_add_back(&data->player, new);
+}
+
+void	add_cube(t_data *data)
+{
+	t_list *last = list_last(data->player);
+	t_cube *tmp = malloc(sizeof(t_cube));
+	if (!tmp) {
+		trace_log(ERROR, "Malloc error");
+		// Return error
+	}
+
+	t_cube *last_content = (t_cube*)last->content;
+	if (last_content->direction == UP) {
+		tmp->position.x = last_content->position.x;
+		tmp->position.y = last_content->position.y + SQUARE_SIZE;
+		tmp->direction = UP;
+	} else if (last_content->direction == DOWN) {
+		tmp->position.x = last_content->position.x;
+		tmp->position.y = last_content->position.y - SQUARE_SIZE;
+		tmp->direction = DOWN;
+	} else if (last_content->direction == LEFT) {
+		tmp->position.x = last_content->position.x + SQUARE_SIZE ;
+		tmp->position.y = last_content->position.y;
+		tmp->direction = LEFT;
+	} else if (last_content->direction == RIGHT) {
+		tmp->position.x = last_content->position.x - SQUARE_SIZE ;
+		tmp->position.y = last_content->position.y;
+		tmp->direction = RIGHT;
+	}
+	t_list *new = list_new(tmp);
+	list_add_back(&data->player, new);
+}
+
+// TODO: draw_triangle
+/** .  draw_triangle(data, (t_vector2){W_WIDTH/2, 10}, (t_vector2){300, 100}, (t_vector2){500, 100}, RED);  . **/
+// TODO: remove conditional jumps on rendering
+// TODO: FPS
 int	main(void)
 {
 	t_data	data;
 	bool	window_should_close = false;
 
 	init_window(&data, W_WIDTH, W_HEIGHT, "Cnake", 0x00181818);
-	int	tab[NUMBER_OF_SQUARE];
-	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
-		tab[i] = j;
-	srand(time(NULL));
-	data.player_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
-	data.player_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+
+	data.player = NULL;
+	init_player(&data);
+	add_cube(&data);
+	add_cube(&data);
+	add_cube(&data);
+
+	t_list	*to_turns = NULL;
 
 	XEvent event;
+	double start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
 	while (!window_should_close) {
 		while (XPending(data.display)) {
 			XNextEvent(data.display, &event);
@@ -168,12 +234,93 @@ int	main(void)
 				KeySym keysym = XLookupKeysym(&event.xkey, 0);
 				if (keysym == XK_Escape)
 					window_should_close = true;
+				else {
+					t_cube *cube = (t_cube*)data.player->content;
+					if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
+						cube->direction = LEFT;
+						t_turn *turn = malloc(sizeof(t_turn));
+						if (!turn) return (1);
+						turn->position.x = cube->position.x;
+						turn->position.y = cube->position.y;
+						turn->direction = LEFT;
+						t_list *new = list_new(turn);
+						list_add_back(&to_turns, new);
+					} else if (keysym == XK_Right && cube->direction != RIGHT && cube->direction != LEFT) {
+						cube->direction = RIGHT;
+						t_turn *turn = malloc(sizeof(t_turn));
+						if (!turn) return (1);
+						turn->position.x = cube->position.x;
+						turn->position.y = cube->position.y;
+						turn->direction = RIGHT;
+						t_list *new = list_new(turn);
+						list_add_back(&to_turns, new);
+					} else if (keysym == XK_Up && cube->direction != UP && cube->direction != DOWN) {
+						cube->direction = UP;
+						t_turn *turn = malloc(sizeof(t_turn));
+						if (!turn) return (1);
+						turn->position.x = cube->position.x;
+						turn->position.y = cube->position.y;
+						turn->direction = UP;
+						t_list *new = list_new(turn);
+						list_add_back(&to_turns, new);
+					} else if (keysym == XK_Down && cube->direction != DOWN && cube->direction != UP ) {
+						cube->direction = DOWN;
+						t_turn *turn = malloc(sizeof(t_turn));
+						if (!turn) return (1);
+						turn->position.x = cube->position.x;
+						turn->position.y = cube->position.y;
+						turn->direction = DOWN;
+						t_list *new = list_new(turn);
+						list_add_back(&to_turns, new);
+					}
+				}
 			} else if (event.type == ClientMessage) {
 				if ((Atom)event.xclient.data.l[0] == data.wm_delete_window)
 					window_should_close = true;
 			}
 		}
+	
+		t_list *curr = data.player;
+		while (curr) {
+			t_cube *cube = (t_cube *)curr->content;
+			if (to_turns) {
+				t_list *curr2 = to_turns;
+				while (curr2) {
+					t_turn *turn = (t_turn *)curr2->content;
+					if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
+						cube->direction = turn->direction;
+						break ;
+					}
+					curr2 = curr2->next;
+				}
+			}
+			curr = curr->next;
+		}
+
 		clear_background(&data, (t_color){24, 24, 24, 255});
+		// Update data
+		double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
+		if (end - start >= 300) {
+			curr = data.player;
+			for (; curr; curr = curr->next) {
+				t_cube	*cube = (t_cube *)curr->content;
+				switch (cube->direction) {
+					case UP: {
+						cube->position.y -= SQUARE_SIZE;
+					} break ;
+					case DOWN: {
+						cube->position.y += SQUARE_SIZE;
+					} break ;
+					case LEFT: {
+						cube->position.x -= SQUARE_SIZE;
+					} break ;
+					case RIGHT: {
+						cube->position.x += SQUARE_SIZE;
+					} break ;
+				}
+			}
+			start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
+		}
 		render(&data);
 	}
 	close_window(&data);
