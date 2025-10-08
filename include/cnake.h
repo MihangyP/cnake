@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <math.h>
+#include <time.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
@@ -110,6 +111,7 @@ typedef struct
 	int		depth;
 	Atom	wm_delete_window;
 	t_img	*img;
+	t_vector2	player_position;
 }	t_data;
 
 char	*itoa(int integer);

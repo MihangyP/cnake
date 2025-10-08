@@ -41,7 +41,10 @@ void	init_window(t_data *data, size_t width, size_t height, const char *title,
 	XSelectInput(data->display, data->window, KeyPressMask);
 	XMapWindow(data->display, data->window);
 	data->img = new_image(data, W_WIDTH, W_HEIGHT);
-	XFlush(data->display);
+	/** .  XFlush(data->display);  . **/
+	trace_log(INFO, "Window Initialise succesfully");
+	trace_log(INFO, "   WIDTH: %d", W_WIDTH);
+	trace_log(INFO, "   HEIGHT: %d", W_HEIGHT);
 }
 
 void	close_window(t_data *data)
@@ -51,6 +54,7 @@ void	close_window(t_data *data)
 	XFreeGC(data->display, data->gc);
 	XDestroyWindow(data->display, data->window);
 	XCloseDisplay(data->display);
+	trace_log(INFO, "Window Closed succesfully");
 }
 
 void	draw_grid(t_data *data, t_color color)
@@ -103,7 +107,7 @@ void	*new_image(t_data *data, int width, int height)
 	img->width = width;
 	img->height = height;
 	img->pix = XCreatePixmap(data->display, data->root, width, height, data->depth);
-	XFlush(data->display);
+	/** .  XFlush(data->display);  . **/
 	return (img);
 }
 
@@ -121,7 +125,7 @@ void	put_buffer_to_window(t_data *data)
 			data->img->width, data->img->height);
 	XCopyArea(data->display, data->img->pix, data->window, data->gc,
 			0, 0, data->img->width, data->img->height, 0, 0);
-	XFlush(data->display);
+	/** .  XFlush(data->display);  . **/
 }
 
 void	clear_background(t_data *data, t_color color)
@@ -139,7 +143,7 @@ void	clear_background(t_data *data, t_color color)
 void	render(t_data *data)
 {
 	draw_grid(data, DONTOWHITE);
-	draw_rectangle(data, (t_vector2){W_WIDTH/2, W_HEIGHT/2}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
+	draw_rectangle(data, data->player_position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
 	put_buffer_to_window(data);
 }
 
@@ -149,6 +153,12 @@ int	main(void)
 	bool	window_should_close = false;
 
 	init_window(&data, W_WIDTH, W_HEIGHT, "Cnake", 0x00181818);
+	int	tab[NUMBER_OF_SQUARE];
+	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
+		tab[i] = j;
+	srand(time(NULL));
+	data.player_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	data.player_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
 
 	XEvent event;
 	while (!window_should_close) {
