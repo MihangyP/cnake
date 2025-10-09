@@ -46,7 +46,7 @@ void	init_window(t_data *data, size_t width, size_t height, const char *title,
 	XSelectInput(data->display, data->window, KeyPressMask);
 	XMapWindow(data->display, data->window);
 	data->img = new_image(data, W_WIDTH, W_HEIGHT);
-	/** .  XFlush(data->display);  . **/
+	data->paused = false;
 	trace_log(INFO, "Window initialised succesfully");
 	trace_log(INFO, "   > Window size: %d x %d", W_WIDTH, W_HEIGHT);
 }
@@ -150,7 +150,7 @@ void	clear_background(t_data *data, t_color color)
 
 void	render(t_data *data)
 {
-	draw_grid(data, DONTOWHITE);
+	/** .  draw_grid(data, DONTOWHITE);  . **/
 	t_list *curr = data->player;
 	t_cube *cube  = NULL;
 	while (curr) {
@@ -160,6 +160,10 @@ void	render(t_data *data)
 	}
 	t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
 	draw_circle(data, circle_pos, SQUARE_SIZE / 3, SKYBLUE);
+	if (data->paused) {
+		draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
+				(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
+	}
 	put_buffer_to_window(data);
 }
 
@@ -247,7 +251,9 @@ int	main(void)
 				KeySym keysym = XLookupKeysym(&event.xkey, 0);
 				if (keysym == XK_Escape)
 					window_should_close = true;
-				else {
+				else if (keysym == XK_space)
+					data.paused = !data.paused;
+				else if (!data.paused) {
 					t_cube *cube = (t_cube*)data.player->content;
 					if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
 						cube->direction = LEFT;
@@ -299,54 +305,56 @@ int	main(void)
 	
 		clear_background(&data, (t_color){24, 24, 24, 255});
 		// Update data
-		double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-		if (end - start >= 160) {
-			t_list *curr = data.player;
-			while (curr) {
-				t_cube *cube = (t_cube *)curr->content;
-				if (to_turns) {
-					t_list *curr2 = to_turns;
-					while (curr2) {
-						t_turn *turn = (t_turn *)curr2->content;
-						if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
-							++turn->nb_collision;
-							cube->direction = turn->direction;
-							if (turn->nb_collision == (int)list_size(data.player))
-								list_del_front(&to_turns);
-							break ;
+		if (!data.paused) {
+			double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
+			if (end - start >= 160) {
+				t_list *curr = data.player;
+				while (curr) {
+					t_cube *cube = (t_cube *)curr->content;
+					if (to_turns) {
+						t_list *curr2 = to_turns;
+						while (curr2) {
+							t_turn *turn = (t_turn *)curr2->content;
+							if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
+								++turn->nb_collision;
+								cube->direction = turn->direction;
+								if (turn->nb_collision == (int)list_size(data.player))
+									list_del_front(&to_turns);
+								break ;
+							}
+							curr2 = curr2->next;
 						}
-						curr2 = curr2->next;
+					}
+					curr = curr->next;
+				}
+
+				curr = data.player;
+				for (; curr; curr = curr->next) {
+					t_cube	*cube = (t_cube *)curr->content;
+					switch (cube->direction) {
+						case UP: {
+							cube->position.y -= SQUARE_SIZE;
+						} break ;
+						case DOWN: {
+							cube->position.y += SQUARE_SIZE;
+						} break ;
+						case LEFT: {
+							cube->position.x -= SQUARE_SIZE;
+						} break ;
+						case RIGHT: {
+							cube->position.x += SQUARE_SIZE;
+						} break ;
 					}
 				}
-				curr = curr->next;
+				start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
 			}
-
-			curr = data.player;
-			for (; curr; curr = curr->next) {
-				t_cube	*cube = (t_cube *)curr->content;
-				switch (cube->direction) {
-					case UP: {
-						cube->position.y -= SQUARE_SIZE;
-					} break ;
-					case DOWN: {
-						cube->position.y += SQUARE_SIZE;
-					} break ;
-					case LEFT: {
-						cube->position.x -= SQUARE_SIZE;
-					} break ;
-					case RIGHT: {
-						cube->position.x += SQUARE_SIZE;
-					} break ;
-				}
+			t_cube *tmp = (t_cube *)data.player->content;
+			t_vector2	player_pos = tmp->position;
+			if (check_collision_rec_circle(player_pos, data.collectible_position)) {
+				data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+				data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+				add_cube(&data);
 			}
-			start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-		}
-		t_cube *tmp = (t_cube *)data.player->content;
-		t_vector2	player_pos = tmp->position;
-		if (check_collision_rec_circle(player_pos, data.collectible_position)) {
-			data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
-			data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
-			add_cube(&data);
 		}
 		render(&data);
 	}

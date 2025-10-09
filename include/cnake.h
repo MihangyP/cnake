@@ -14,7 +14,7 @@
 
 #define W_WIDTH 600
 #define W_HEIGHT W_WIDTH
-#define NUMBER_OF_SQUARE 20
+#define NUMBER_OF_SQUARE 30
 #define SQUARE_SIZE (W_WIDTH / NUMBER_OF_SQUARE)
 
 // TODO: implement my own hash table
@@ -118,6 +118,7 @@ typedef struct {
 	t_img	*img;
 	t_list	*player;
 	t_vector2 collectible_position;
+	bool	paused;
 }	t_data;
 
 char	*itoa(int integer);
@@ -133,15 +134,11 @@ void	list_del_front(t_list **list);
 size_t	list_size(t_list *list);
 void	list_print(t_list *list);
 
-// min max
-int	min(float a, float b);
-int	max(float a, float b);
-
 // shapes
 void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color);
 void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size, t_color color);
 void	draw_circle(t_data *data, t_vector2 center, int radius, t_color color);
-void	draw_triangle(t_data *data, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color);
+void	draw_pause_icon(t_data *data, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color);
 
 // rgba
 int		rgba_to_int(t_color color);
