@@ -217,6 +217,17 @@ void	add_cube(t_data *data)
 	list_add_back(&data->player, new);
 }
 
+t_turn	*create_new_turn(t_cube cube)
+{
+	t_turn *turn = malloc(sizeof(t_turn));
+	if (!turn) return (NULL);
+	turn->position.x = cube.position.x;
+	turn->position.y = cube.position.y;
+	turn->direction = cube.direction;
+	turn->nb_collision = 0;
+	return (turn);
+}
+
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
 int	main(void)
@@ -257,42 +268,22 @@ int	main(void)
 					t_cube *cube = (t_cube*)data.player->content;
 					if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
 						cube->direction = LEFT;
-						t_turn *turn = malloc(sizeof(t_turn));
-						if (!turn) return (1);
-						turn->position.x = cube->position.x;
-						turn->position.y = cube->position.y;
-						turn->direction = LEFT;
-						turn->nb_collision = 0;
+						t_turn *turn = create_new_turn(*cube);
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					} else if (keysym == XK_Right && cube->direction != RIGHT && cube->direction != LEFT) {
 						cube->direction = RIGHT;
-						t_turn *turn = malloc(sizeof(t_turn));
-						if (!turn) return (1);
-						turn->position.x = cube->position.x;
-						turn->position.y = cube->position.y;
-						turn->direction = RIGHT;
-						turn->nb_collision = 0;
+						t_turn *turn = create_new_turn(*cube);
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					} else if (keysym == XK_Up && cube->direction != UP && cube->direction != DOWN) {
 						cube->direction = UP;
-						t_turn *turn = malloc(sizeof(t_turn));
-						if (!turn) return (1);
-						turn->position.x = cube->position.x;
-						turn->position.y = cube->position.y;
-						turn->direction = UP;
-						turn->nb_collision = 0;
+						t_turn *turn = create_new_turn(*cube);
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					} else if (keysym == XK_Down && cube->direction != DOWN && cube->direction != UP ) {
 						cube->direction = DOWN;
-						t_turn *turn = malloc(sizeof(t_turn));
-						if (!turn) return (1);
-						turn->position.x = cube->position.x;
-						turn->position.y = cube->position.y;
-						turn->direction = DOWN;
-						turn->nb_collision = 0;
+						t_turn *turn = create_new_turn(*cube);
 						t_list *new = list_new(turn);
 						list_add_back(&to_turns, new);
 					}
