@@ -14,7 +14,7 @@
 
 #define W_WIDTH 600
 #define W_HEIGHT W_WIDTH
-#define NUMBER_OF_SQUARE 30
+#define NUMBER_OF_SQUARE 20
 #define SQUARE_SIZE (W_WIDTH / NUMBER_OF_SQUARE)
 
 // TODO: implement my own hash table

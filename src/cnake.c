@@ -214,6 +214,7 @@ void	add_cube(t_data *data)
 }
 
 // TODO: remove conditional jumps on rendering
+// TODO: fix bugs: infinite loop, target position
 int	main(void)
 {
 	t_data	data;
@@ -299,7 +300,7 @@ int	main(void)
 		clear_background(&data, (t_color){24, 24, 24, 255});
 		// Update data
 		double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-		if (end - start >= 200) {
+		if (end - start >= 160) {
 			t_list *curr = data.player;
 			while (curr) {
 				t_cube *cube = (t_cube *)curr->content;
