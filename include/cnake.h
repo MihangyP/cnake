@@ -75,6 +75,13 @@ typedef struct s_list {
 typedef struct {
 	float x;
 	float y;
+	float width;
+	float height;
+}	t_rectangle;
+
+typedef struct {
+	float x;
+	float y;
 }	t_vector2;
 
 typedef struct {
@@ -125,6 +132,10 @@ void	list_free(t_list *list);
 void	list_del_front(t_list **list);
 size_t	list_size(t_list *list);
 void	list_print(t_list *list);
+
+// min max
+int	min(float a, float b);
+int	max(float a, float b);
 
 // shapes
 void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color);

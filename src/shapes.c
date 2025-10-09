@@ -66,12 +66,12 @@ void	draw_circle(t_data *data, t_vector2 center, int radius, t_color color)
 	}
 }
 
-static int	min(float a, float b)
+int	min(float a, float b)
 {
 	return (a <= b ? a : b);
 }
 
-static int	max(float a, float b)
+int	max(float a, float b)
 {
 	return (a >= b ? a : b);
 }

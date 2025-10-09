@@ -1,5 +1,10 @@
 #include "cnake.h"
 
+bool	check_collision_rec_circle(t_vector2 rec, t_vector2 center)
+{
+	return (rec.x == center.x && rec.y == center.y);
+}
+
 void	make_window_not_resizable(t_data *data, size_t width, size_t height)
 {
 	XSizeHints	hints;
@@ -153,7 +158,8 @@ void	render(t_data *data)
 		draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
 		curr = curr->next;
 	}
-	draw_rectangle(data, data->collectible_position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
+	t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
+	draw_circle(data, circle_pos, SQUARE_SIZE / 3, SKYBLUE);
 	put_buffer_to_window(data);
 }
 
@@ -333,6 +339,13 @@ int	main(void)
 				}
 			}
 			start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
+		}
+		t_cube *tmp = (t_cube *)data.player->content;
+		t_vector2	player_pos = tmp->position;
+		if (check_collision_rec_circle(player_pos, data.collectible_position)) {
+			data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+			data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+			add_cube(&data);
 		}
 		render(&data);
 	}
