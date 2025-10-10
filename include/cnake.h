@@ -16,6 +16,7 @@
 #define W_HEIGHT W_WIDTH
 #define NUMBER_OF_SQUARE 20
 #define SQUARE_SIZE (W_WIDTH / NUMBER_OF_SQUARE)
+#define INITIAL_SNAQUE_SIZE 3
 
 // TODO: implement my own hash table
 

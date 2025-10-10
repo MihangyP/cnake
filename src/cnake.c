@@ -222,10 +222,17 @@ void	init_player(t_data *data)
 	head->position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
 	head->position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
 	head->direction = get_random_number(UP, RIGHT);
+	if (head->direction == LEFT && head->position.x > W_WIDTH - (SQUARE_SIZE * INITIAL_SNAQUE_SIZE))
+		head->position.x = W_WIDTH - (SQUARE_SIZE * INITIAL_SNAQUE_SIZE);
+	else if (head->direction == RIGHT && head->position.x < SQUARE_SIZE * (INITIAL_SNAQUE_SIZE - 1))
+		head->position.x = SQUARE_SIZE * (INITIAL_SNAQUE_SIZE - 1);
+	else if (head->direction == UP && head->position.y > W_HEIGHT - (SQUARE_SIZE * 3))
+		head->position.y = W_HEIGHT - (SQUARE_SIZE * 3);
+	else if (head->direction == DOWN && head->position.y < SQUARE_SIZE * (INITIAL_SNAQUE_SIZE - 1))
+		head->position.y = SQUARE_SIZE * (INITIAL_SNAQUE_SIZE - 1);
 	t_list	*new = list_new(head);
 	list_add_back(&data->player, new);
 
-	add_cube(data);
 	add_cube(data);
 	add_cube(data);
 }
