@@ -176,25 +176,6 @@ void	render(t_data *data)
 	}
 }
 
-void	init_player(t_data *data)
-{
-	int	tab[NUMBER_OF_SQUARE];
-	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
-		tab[i] = j;
-
-	t_cube	*head = malloc(sizeof(t_cube));
-	if (!head) {
-		trace_log(ERROR, "Malloc error");
-		// Return an error
-	}
-	srand(time(NULL));
-	head->position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
-	head->position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
-	head->direction = get_random_number(UP, RIGHT);
-	t_list	*new = list_new(head);
-	list_add_back(&data->player, new);
-}
-
 void	add_cube(t_data *data)
 {
 	t_list *last = list_last(data->player);
@@ -226,6 +207,29 @@ void	add_cube(t_data *data)
 	list_add_back(&data->player, new);
 }
 
+void	init_player(t_data *data)
+{
+	int	tab[NUMBER_OF_SQUARE];
+	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
+		tab[i] = j;
+
+	t_cube	*head = malloc(sizeof(t_cube));
+	if (!head) {
+		trace_log(ERROR, "Malloc error");
+		// Return an error
+	}
+	srand(time(NULL));
+	head->position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	head->position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	head->direction = get_random_number(UP, RIGHT);
+	t_list	*new = list_new(head);
+	list_add_back(&data->player, new);
+
+	add_cube(data);
+	add_cube(data);
+	add_cube(data);
+}
+
 t_turn	*create_new_turn(t_cube cube)
 {
 	t_turn *turn = malloc(sizeof(t_turn));
@@ -237,9 +241,34 @@ t_turn	*create_new_turn(t_cube cube)
 	return (turn);
 }
 
+bool	in_player_position(t_list *player, t_vector2 v)
+{
+	while (player) {
+		t_cube *cube = (t_cube *)player->content;
+		if (v.x == cube->position.x && v.y == cube->position.y)
+			return (true);
+		player = player->next;
+	}
+	return (false);
+}
+
+t_vector2	generate_random_collectible_position(t_list *player, int tab[])
+{
+	t_vector2 result;
+
+	result.x = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+	result.y = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+	while (in_player_position(player, result)) {
+		result.x = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+		result.y = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+	}
+	return (result);
+}
+
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
 // TODO: fix bug: sometimes, all the to_turns are not removed
+// TODO: optimze the code
 int	main(void)
 {
 	t_data	data;
@@ -249,9 +278,6 @@ int	main(void)
 
 	data.player = NULL;
 	init_player(&data);
-	add_cube(&data);
-	add_cube(&data);
-	add_cube(&data);
 
 	t_list *to_turns = NULL;
 
@@ -259,8 +285,7 @@ int	main(void)
 	int	tab[NUMBER_OF_SQUARE];
 	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
 		tab[i] = j;
-	data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
-	data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+	data.collectible_position = generate_random_collectible_position(data.player, tab);
 	//
 
 	XEvent event;
@@ -352,8 +377,7 @@ int	main(void)
 			}
 			t_cube *tmp = (t_cube *)data.player->content;
 			if (check_collision_rec_circle(tmp->position, data.collectible_position)) {
-				data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
-				data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+				data.collectible_position = generate_random_collectible_position(data.player, tab);
 				add_cube(&data);
 			}
 
