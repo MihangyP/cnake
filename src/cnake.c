@@ -174,7 +174,6 @@ void	render(t_data *data)
 		draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
 				(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
 	}
-	put_buffer_to_window(data);
 }
 
 void	init_player(t_data *data)
@@ -240,7 +239,7 @@ t_turn	*create_new_turn(t_cube cube)
 
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
-// TODO: fix bug: sometimes, the position of the target is not correct
+// TODO: fix bug: sometimes, all the to_turns are not removed
 int	main(void)
 {
 	t_data	data;
@@ -320,9 +319,10 @@ int	main(void)
 							if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
 								++turn->nb_collision;
 								cube->direction = turn->direction;
-								if (turn->nb_collision == (int)list_size(data.player))
+								if (turn->nb_collision >= (int)list_size(data.player)) {
 									list_del_front(&to_turns);
-								break ;
+									break ;
+								}
 							}
 							curr2 = curr2->next;
 						}
@@ -373,7 +373,17 @@ int	main(void)
 				curr = curr->next;
 			}
 		}
+
 		render(&data);
+		{
+			t_list *curr = to_turns;
+			while (curr) {
+				t_turn *turn = (t_turn *)curr->content;
+				draw_rectangle(&data, turn->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, RED);
+				curr = curr->next;
+			}
+		}
+		put_buffer_to_window(&data);
 	}
 	close_window(&data);
 	return (0);
