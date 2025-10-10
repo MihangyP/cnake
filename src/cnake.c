@@ -68,18 +68,28 @@ void	close_window(t_data *data)
 	trace_log(INFO, "Window closed succesfully");
 }
 
-void	draw_grid(t_data *data, t_color color)
+void	draw_grid(t_data *data, t_color color1, t_color color2)
 {
-	size_t	x = SQUARE_SIZE;
-	size_t 	y = SQUARE_SIZE;
-
-	while (x <= W_WIDTH) {
-		draw_line(data, (t_vector2){x, 0}, (t_vector2){x, W_HEIGHT}, color);
-		x += SQUARE_SIZE;
-	}
-	while (y <= W_HEIGHT) {
-		draw_line(data, (t_vector2){0, y}, (t_vector2){W_WIDTH, y}, color);
+	size_t	x;
+	size_t 	y;
+	int tmp_y = 0;
+	int tmp_x;
+	y = 0;
+	t_color grid_color;
+	while (y < W_HEIGHT) {
+		tmp_x = 0;
+		x = 0;
+		while (x < W_WIDTH) {
+			if ((tmp_x + tmp_y) % 2 == 0)
+				grid_color = color1;
+			else
+				grid_color = color2;
+			draw_rectangle(data, (t_vector2){x, y}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, grid_color);
+			x += SQUARE_SIZE;
+			++tmp_x;
+		}
 		y += SQUARE_SIZE;
+		++tmp_y;
 	}
 }
 
@@ -150,7 +160,7 @@ void	clear_background(t_data *data, t_color color)
 
 void	render(t_data *data)
 {
-	/** .  draw_grid(data, DONTOWHITE);  . **/
+	draw_grid(data, (t_color){38, 38, 38, 255}, (t_color){24, 24, 24, 255});
 	t_list *curr = data->player;
 	t_cube *cube  = NULL;
 	while (curr) {
@@ -159,7 +169,7 @@ void	render(t_data *data)
 		curr = curr->next;
 	}
 	t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
-	draw_circle(data, circle_pos, SQUARE_SIZE / 3, GOLD);
+	draw_circle(data, circle_pos, SQUARE_SIZE / 4, GOLD);
 	if (data->paused) {
 		draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
 				(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
@@ -250,8 +260,8 @@ int	main(void)
 	int	tab[NUMBER_OF_SQUARE];
 	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
 		tab[i] = j;
-	data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
-	data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+	data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+	data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
 	//
 
 	XEvent event;
@@ -342,8 +352,8 @@ int	main(void)
 			}
 			t_cube *tmp = (t_cube *)data.player->content;
 			if (check_collision_rec_circle(tmp->position, data.collectible_position)) {
-				data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
-				data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
+				data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
+				data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE - 1)];
 				add_cube(&data);
 			}
 
