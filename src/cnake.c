@@ -340,11 +340,25 @@ int	main(void)
 				start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
 			}
 			t_cube *tmp = (t_cube *)data.player->content;
-			t_vector2	player_pos = tmp->position;
-			if (check_collision_rec_circle(player_pos, data.collectible_position)) {
+			if (check_collision_rec_circle(tmp->position, data.collectible_position)) {
 				data.collectible_position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
 				data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
 				add_cube(&data);
+			}
+			
+			t_list *curr = data.player;
+			while (curr) {
+				t_cube *tmp = (t_cube *)curr->content;
+				if (tmp->position.x > W_WIDTH) {
+					tmp->position.x = 0;
+				} else if (tmp->position.x < 0) {
+					tmp->position.x = W_WIDTH;
+				} else if (tmp->position.y > W_HEIGHT) {
+					tmp->position.y = 0;
+				} else if (tmp->position.y < 0) {
+					tmp->position.y = W_HEIGHT;
+				}
+				curr = curr->next;
 			}
 		}
 		render(&data);
