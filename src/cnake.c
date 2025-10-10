@@ -155,11 +155,11 @@ void	render(t_data *data)
 	t_cube *cube  = NULL;
 	while (curr) {
 		cube = (t_cube *)curr->content;
-		draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, GOLD);
+		draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
 		curr = curr->next;
 	}
 	t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
-	draw_circle(data, circle_pos, SQUARE_SIZE / 3, SKYBLUE);
+	draw_circle(data, circle_pos, SQUARE_SIZE / 3, GOLD);
 	if (data->paused) {
 		draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
 				(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
@@ -230,6 +230,7 @@ t_turn	*create_new_turn(t_cube cube)
 
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
+// TODO: fix bug: sometimes, the position of the target is not correct
 int	main(void)
 {
 	t_data	data;
@@ -345,7 +346,8 @@ int	main(void)
 				data.collectible_position.y = tab[get_random_number(0, NUMBER_OF_SQUARE)];
 				add_cube(&data);
 			}
-			
+
+			// To make snake pass through the walls
 			t_list *curr = data.player;
 			while (curr) {
 				t_cube *tmp = (t_cube *)curr->content;
