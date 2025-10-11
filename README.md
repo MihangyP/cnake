@@ -14,4 +14,4 @@ $ ./build/cnake
 - [ ] Implement a death screen
 - [ ] Make the game more smooth
 - [ ] Try to support web platform using wasm
-- [ ] Add sounds effects using miniaudio 
+- [X] Add sounds effects using miniaudio 
