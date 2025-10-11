@@ -120,6 +120,7 @@ typedef struct {
 	t_list	*player;
 	t_vector2 collectible_position;
 	bool	paused;
+	bool	dead;
 }	t_data;
 
 char	*itoa(int integer);

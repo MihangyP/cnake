@@ -5,6 +5,26 @@ bool	check_collision_rec_circle(t_vector2 rec, t_vector2 center)
 	return (rec.x == center.x && rec.y == center.y);
 }
 
+bool	check_collision_recs(t_list *player)
+{
+	bool	collision = false;
+	t_cube *head = (t_cube *)player->content;
+	int	x_head = head->position.x;
+	int	y_head = head->position.y;
+
+	if (head->direction == RIGHT) x_head += SQUARE_SIZE;
+	if (head->direction == DOWN) y_head += SQUARE_SIZE;
+
+	t_list *curr = player->next;
+	while (curr) {
+		t_cube *cube = (t_cube *)curr->content;
+		if (cube->position.x == x_head && cube->position.y == y_head)
+			collision = true;
+		curr = curr->next;
+	}
+	return (collision);
+}
+
 void	make_window_not_resizable(t_data *data, size_t width, size_t height)
 {
 	XSizeHints	hints;
@@ -47,6 +67,7 @@ void	init_window(t_data *data, size_t width, size_t height, const char *title,
 	XMapWindow(data->display, data->window);
 	data->img = new_image(data, W_WIDTH, W_HEIGHT);
 	data->paused = false;
+	data->dead = false;
 	trace_log(INFO, "Window initialised succesfully");
 	trace_log(INFO, "   > Window size: %d x %d", W_WIDTH, W_HEIGHT);
 }
@@ -170,9 +191,12 @@ void	render(t_data *data)
 	}
 	t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
 	draw_circle(data, circle_pos, SQUARE_SIZE / 4, GOLD);
-	if (data->paused) {
+	if (!data->dead && data->paused) {
 		draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
 				(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
+	}
+	if (data->dead) {
+		draw_rectangle(data, (t_vector2){(W_WIDTH+SQUARE_SIZE)/2, (W_HEIGHT+SQUARE_SIZE)/2}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, DONTOWHITE);
 	}
 }
 
@@ -304,9 +328,9 @@ int	main(void)
 				KeySym keysym = XLookupKeysym(&event.xkey, 0);
 				if (keysym == XK_Escape)
 					window_should_close = true;
-				else if (keysym == XK_space)
+				else if (keysym == XK_space && !data.dead)
 					data.paused = !data.paused;
-				else if (!data.paused) {
+				else if (!data.dead && !data.paused) {
 					t_cube *cube = (t_cube*)data.player->content;
 					if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
 						cube->direction = LEFT;
@@ -338,7 +362,7 @@ int	main(void)
 	
 		clear_background(&data, (t_color){24, 24, 24, 255});
 		// Update data
-		if (!data.paused) {
+		if (!data.dead && !data.paused) {
 			double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
 			if (end - start >= 160) {
 				t_list *curr = data.player;
@@ -388,6 +412,9 @@ int	main(void)
 				add_cube(&data);
 			}
 
+			if (check_collision_recs(data.player))
+				data.dead = true;
+
 			// To make snake pass through the walls
 			t_list *curr = data.player;
 			while (curr) {
@@ -407,12 +434,12 @@ int	main(void)
 
 		render(&data);
 		{
-			t_list *curr = to_turns;
-			while (curr) {
-				t_turn *turn = (t_turn *)curr->content;
-				draw_rectangle(&data, turn->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, RED);
-				curr = curr->next;
-			}
+			/** .  t_list *curr = to_turns;  . **/
+			/** .  while (curr) {  . **/
+			/** .      t_turn *turn = (t_turn *)curr->content;  . **/
+			/** .      draw_rectangle(&data, turn->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, RED);  . **/
+			/** .      curr = curr->next;  . **/
+			/** .  }  . **/
 		}
 		put_buffer_to_window(&data);
 	}
