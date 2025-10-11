@@ -1,4 +1,6 @@
 #include "cnake.h"
+#define MA_IMPLEMENTATION
+#include "miniaudio.h"
 
 bool	check_collision_rec_circle(t_vector2 rec, t_vector2 center)
 {
@@ -299,11 +301,28 @@ t_vector2	generate_random_collectible_position(t_list *player, int tab[])
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
 // TODO: fix bug: sometimes, all the to_turns are not removed
-// TODO: optimze the code
+// TODO: optimze the codeA
+// TODO: add sounds
+/*
+    ma_engine			engine;
+    if (ma_engine_init(NULL, &engine) != MA_SUCCESS)
+        return (1);
+    ma_engine_play_sound(&engine, "./resources/country.mp3", NULL);
+	while (1) {}
+	ma_engine_uninit(&engine);
+*/
 int	main(void)
 {
 	t_data	data;
 	bool	window_should_close = false;
+	
+	// For sounds
+	ma_engine	engine;
+	if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
+		trace_log(ERROR, "Cannot init ma_engine");
+		return (1);
+	}
+	//
 
 	init_window(&data, W_WIDTH, W_HEIGHT, "Cnake", 0x00181818);
 
@@ -312,7 +331,7 @@ int	main(void)
 
 	t_list *to_turns = NULL;
 
-	// collecible
+	// target
 	int	tab[NUMBER_OF_SQUARE];
 	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
 		tab[i] = j;
@@ -408,6 +427,7 @@ int	main(void)
 			}
 			t_cube *tmp = (t_cube *)data.player->content;
 			if (check_collision_rec_circle(tmp->position, data.collectible_position)) {
+				ma_engine_play_sound(&engine, "./resources/coin.wav", NULL);
 				data.collectible_position = generate_random_collectible_position(data.player, tab);
 				add_cube(&data);
 			}
@@ -444,5 +464,6 @@ int	main(void)
 		put_buffer_to_window(&data);
 	}
 	close_window(&data);
+	ma_engine_uninit(&engine);
 	return (0);
 }
