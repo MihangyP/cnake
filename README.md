@@ -1,11 +1,21 @@
 # Cnake
-This is a simple snake game made with C and Xlib.
+This is a simple snake game written in pure C.
 
-## Quick Start
+## How to build and run the program?
+To build:
 ```console
-$ make
+$ cc nob.c -o nob
+$ ./nob
+```
+To run:
+```console
 $ ./build/cnake
 ```
+
+### Libraries used:
+- Xlib - for graphics rendering
+- miniaudio - for sounds effects
+- NoBuild (or nob) - to build the project
 
 ### TODO
 - [ ] Font rendering
@@ -13,5 +23,5 @@ $ ./build/cnake
 - [ ] Add levels
 - [ ] Implement a death screen
 - [ ] Make the game more smooth
-- [ ] Try to support web platform using wasm
+- [X] Use nob.h to build the program
 - [X] Add sounds effects using miniaudio 
