@@ -70,6 +70,7 @@ void	init_window(t_data *data, size_t width, size_t height, const char *title,
 	data->img = new_image(data, W_WIDTH, W_HEIGHT);
 	data->paused = false;
 	data->dead = false;
+	data->score = 0;
 	trace_log(INFO, "Window initialised succesfully");
 	trace_log(INFO, "   > Window size: %d x %d", W_WIDTH, W_HEIGHT);
 }
@@ -181,6 +182,23 @@ void	clear_background(t_data *data, t_color color)
 	}
 }
 
+void	draw_text(t_data *data, const char *text, size_t size, int x, int y, t_color color)
+{
+	FT_Set_Char_Size(data->font.face, 24 * 64, 0, size, 0);
+	for (size_t i = 0; text[i]; ++i) {
+		FT_Load_Char(data->font.face, text[i], FT_LOAD_RENDER);
+		FT_Bitmap *bitmap = &data->font.face->glyph->bitmap;
+		for (size_t row = 0; row < bitmap->rows; ++row) {
+			for (size_t col = 0; col < bitmap->width; ++col) {
+				if (bitmap->buffer[row * bitmap->width + col] > 128) {
+					color_pixel(*data->img, x + col, y + row, rgba_to_int(color));
+				}
+			}
+		}
+		x += data->font.face->glyph->advance.x >> 6;
+	}
+}
+
 void	render(t_data *data)
 {
 	draw_grid(data, (t_color){38, 38, 38, 255}, (t_color){24, 24, 24, 255});
@@ -188,7 +206,10 @@ void	render(t_data *data)
 	t_cube *cube  = NULL;
 	while (curr) {
 		cube = (t_cube *)curr->content;
-		draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
+		if (curr == data->player)
+			draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, (t_color){62, 151, 215, 255});
+		else
+			draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
 		curr = curr->next;
 	}
 	t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
@@ -196,10 +217,24 @@ void	render(t_data *data)
 	if (!data->dead && data->paused) {
 		draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
 				(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
+		draw_text(data, "Pause", 69, W_WIDTH/2 - 40, W_HEIGHT/2 - 50, DONTOWHITE);
 	}
 	if (data->dead) {
 		draw_rectangle(data, (t_vector2){(W_WIDTH+SQUARE_SIZE)/2, (W_HEIGHT+SQUARE_SIZE)/2}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, DONTOWHITE);
 	}
+
+	// Score
+	char score_text[69];
+	bzero(score_text, 69);
+	score_text[0] = 's';
+	score_text[1] = 'c';
+	score_text[2] = 'o';
+	score_text[3] = 'r';
+	score_text[4] = 'e';
+	score_text[5] = ':';
+	score_text[6] = ' ';
+	strcat(score_text, itoa(data->score));
+	draw_text(data, score_text, 69, 469, 20, DONTOWHITE);
 }
 
 void	add_cube(t_data *data)
@@ -208,7 +243,7 @@ void	add_cube(t_data *data)
 	t_cube *tmp = malloc(sizeof(t_cube));
 	if (!tmp) {
 		trace_log(ERROR, "Malloc error");
-		// Return error
+		close_window(data);
 	}
 
 	t_cube *last_content = (t_cube*)last->content;
@@ -242,7 +277,7 @@ void	init_player(t_data *data)
 	t_cube	*head = malloc(sizeof(t_cube));
 	if (!head) {
 		trace_log(ERROR, "Malloc error");
-		// Return an error
+		close_window(data);
 	}
 	srand(time(NULL));
 	head->position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
@@ -302,20 +337,11 @@ t_vector2	generate_random_collectible_position(t_list *player, int tab[])
 // TODO: fix bugs: infinite loop, target position
 // TODO: fix bug: sometimes, all the to_turns are not removed
 // TODO: optimze the codeA
-// TODO: add sounds
-/*
-    ma_engine			engine;
-    if (ma_engine_init(NULL, &engine) != MA_SUCCESS)
-        return (1);
-    ma_engine_play_sound(&engine, "./resources/country.mp3", NULL);
-	while (1) {}
-	ma_engine_uninit(&engine);
-*/
+// TODO: fix bug: death checking is not exactly right
 int	main(void)
 {
 	t_data	data;
 	bool	window_should_close = false;
-	
 	// For sounds
 	ma_engine	engine;
 	if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
@@ -323,9 +349,17 @@ int	main(void)
 		return (1);
 	}
 	//
-
+	// For font
+	if (FT_Init_FreeType(&data.font.library)) {
+		trace_log(ERROR, "Cannot init FreeType");
+		return (1);
+	}
+	if (FT_New_Face(data.font.library, "./resources/pixantiqua.ttf", 0, &data.font.face)) {
+		trace_log(ERROR, "Cannot create new face");
+		return (1);
+	}
+	//
 	init_window(&data, W_WIDTH, W_HEIGHT, "Cnake", 0x00181818);
-
 	data.player = NULL;
 	init_player(&data);
 
@@ -408,20 +442,10 @@ int	main(void)
 				curr = data.player;
 				for (; curr; curr = curr->next) {
 					t_cube	*cube = (t_cube *)curr->content;
-					switch (cube->direction) {
-						case UP: {
-							cube->position.y -= SQUARE_SIZE;
-						} break ;
-						case DOWN: {
-							cube->position.y += SQUARE_SIZE;
-						} break ;
-						case LEFT: {
-							cube->position.x -= SQUARE_SIZE;
-						} break ;
-						case RIGHT: {
-							cube->position.x += SQUARE_SIZE;
-						} break ;
-					}
+					if (cube->direction == UP) cube->position.y -= SQUARE_SIZE;
+					if (cube->direction == DOWN) cube->position.y += SQUARE_SIZE;
+					if (cube->direction == LEFT) cube->position.x -= SQUARE_SIZE;
+					if (cube->direction == RIGHT) cube->position.x += SQUARE_SIZE;
 				}
 				start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
 			}
@@ -429,6 +453,7 @@ int	main(void)
 			if (check_collision_rec_circle(tmp->position, data.collectible_position)) {
 				ma_engine_play_sound(&engine, "./resources/coin.wav", NULL);
 				data.collectible_position = generate_random_collectible_position(data.player, tab);
+				++data.score;
 				add_cube(&data);
 			}
 
@@ -465,5 +490,7 @@ int	main(void)
 	}
 	close_window(&data);
 	ma_engine_uninit(&engine);
+	FT_Done_Face(data.font.face);
+	FT_Done_FreeType(data.font.library);
 	return (0);
 }

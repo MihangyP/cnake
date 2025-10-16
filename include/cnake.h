@@ -11,6 +11,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #define W_WIDTH 600
 #define W_HEIGHT W_WIDTH
@@ -98,6 +100,11 @@ typedef struct {
 }	t_cube;
 
 typedef struct {
+	FT_Library	library;
+	FT_Face		face;
+}	t_font;
+
+typedef struct {
 	XImage	*image;
 	Pixmap	pix;
 	GC		gc;
@@ -121,6 +128,8 @@ typedef struct {
 	t_vector2 collectible_position;
 	bool	paused;
 	bool	dead;
+	int		score;
+	t_font	font;
 }	t_data;
 
 char	*itoa(int integer);

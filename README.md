@@ -14,11 +14,12 @@ $ ./build/cnake
 
 ### Libraries used:
 - Xlib - for graphics rendering
-- miniaudio - for sounds effects
+- miniaudio - for sound effects
 - NoBuild (or nob) - to build the project
+- FreeType - for font rendering
 
 ### TODO
-- [ ] Font rendering
+- [X] Font rendering
 - [ ] Add start menu
 - [ ] Add levels
 - [ ] Implement a death screen

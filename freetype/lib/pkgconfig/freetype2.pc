@@ -1,0 +1,14 @@
+prefix=/home/mihangy/freetype
+exec_prefix=/home/mihangy/freetype
+libdir=/home/mihangy/freetype/lib
+includedir=/home/mihangy/freetype/include
+
+Name: FreeType 2
+URL: https://freetype.org
+Description: A free, high-quality, and portable font engine.
+Version: 26.4.20
+Requires: 
+Requires.private: zlib
+Libs: -L/home/mihangy/freetype/lib -lfreetype
+Libs.private: 
+Cflags: -I${includedir}/freetype2
