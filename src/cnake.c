@@ -1,6 +1,6 @@
 #include "cnake.h"
 #define MA_IMPLEMENTATION
-#include "miniaudio.h"
+#include "../miniaudio/miniaudio.h"
 
 bool	check_collision_rec_circle(t_vector2 rec, t_vector2 center)
 {
@@ -71,6 +71,7 @@ void	init_window(t_data *data, size_t width, size_t height, const char *title,
 	data->paused = false;
 	data->dead = false;
 	data->score = 0;
+	data->started = false;
 	trace_log(INFO, "Window initialised succesfully");
 	trace_log(INFO, "   > Window size: %d x %d", W_WIDTH, W_HEIGHT);
 }
@@ -201,40 +202,44 @@ void	draw_text(t_data *data, const char *text, size_t size, int x, int y, t_colo
 
 void	render(t_data *data)
 {
-	draw_grid(data, (t_color){38, 38, 38, 255}, (t_color){24, 24, 24, 255});
-	t_list *curr = data->player;
-	t_cube *cube  = NULL;
-	while (curr) {
-		cube = (t_cube *)curr->content;
-		if (curr == data->player)
-			draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, (t_color){62, 151, 215, 255});
-		else
-			draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
-		curr = curr->next;
+	if (!data->started) {
+		draw_text(data, "CNAKE", 150, W_WIDTH/2 - 90, 200, GOLD);
+		draw_text(data, "PRESS ENTER TO START", 69, W_WIDTH/2 - 140, 300, DONTOWHITE);
+	} else {
+		if (!data->dead) {
+			draw_grid(data, (t_color){38, 38, 38, 255}, (t_color){24, 24, 24, 255});
+			t_list *curr = data->player;
+			t_cube *cube  = NULL;
+			while (curr) {
+				cube = (t_cube *)curr->content;
+				if (curr == data->player)
+					draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, (t_color){62, 151, 215, 255});
+				else
+					draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
+				curr = curr->next;
+			}
+			t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
+			draw_circle(data, circle_pos, SQUARE_SIZE / 4, GOLD);
+			char score_text[69];
+			bzero(score_text, 69);
+			score_text[0] = 's';
+			score_text[1] = 'c';
+			score_text[2] = 'o';
+			score_text[3] = 'r';
+			score_text[4] = 'e';
+			score_text[5] = ':';
+			score_text[6] = ' ';
+			strcat(score_text, itoa(data->score));
+			draw_text(data, score_text, 69, 469, 20, DONTOWHITE);
+			if (data->paused) {
+				draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
+						(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
+			}
+		} else {
+			draw_text(data, "DEAD", 69, W_WIDTH/2 - 40, W_HEIGHT/2 - 20, DONTOWHITE);
+		}
 	}
-	t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
-	draw_circle(data, circle_pos, SQUARE_SIZE / 4, GOLD);
-	if (!data->dead && data->paused) {
-		draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
-				(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
-		draw_text(data, "Pause", 69, W_WIDTH/2 - 40, W_HEIGHT/2 - 50, DONTOWHITE);
-	}
-	if (data->dead) {
-		draw_rectangle(data, (t_vector2){(W_WIDTH+SQUARE_SIZE)/2, (W_HEIGHT+SQUARE_SIZE)/2}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, DONTOWHITE);
-	}
-
-	// Score
-	char score_text[69];
-	bzero(score_text, 69);
-	score_text[0] = 's';
-	score_text[1] = 'c';
-	score_text[2] = 'o';
-	score_text[3] = 'r';
-	score_text[4] = 'e';
-	score_text[5] = ':';
-	score_text[6] = ' ';
-	strcat(score_text, itoa(data->score));
-	draw_text(data, score_text, 69, 469, 20, DONTOWHITE);
+	put_buffer_to_window(data);
 }
 
 void	add_cube(t_data *data)
@@ -381,9 +386,12 @@ int	main(void)
 				KeySym keysym = XLookupKeysym(&event.xkey, 0);
 				if (keysym == XK_Escape)
 					window_should_close = true;
-				else if (keysym == XK_space && !data.dead)
+				else if (keysym == XK_space && data.started && !data.dead)
 					data.paused = !data.paused;
-				else if (!data.dead && !data.paused) {
+				else if (!data.started) {
+					if (keysym == XK_Return)
+						data.started = true;
+				} else if (data.started && !data.dead && !data.paused) {
 					t_cube *cube = (t_cube*)data.player->content;
 					if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
 						cube->direction = LEFT;
@@ -412,10 +420,10 @@ int	main(void)
 					window_should_close = true;
 			}
 		}
-	
+
 		clear_background(&data, (t_color){24, 24, 24, 255});
 		// Update data
-		if (!data.dead && !data.paused) {
+		if (data.started && !data.dead && !data.paused) {
 			double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
 			if (end - start >= 160) {
 				t_list *curr = data.player;
@@ -478,15 +486,6 @@ int	main(void)
 		}
 
 		render(&data);
-		{
-			/** .  t_list *curr = to_turns;  . **/
-			/** .  while (curr) {  . **/
-			/** .      t_turn *turn = (t_turn *)curr->content;  . **/
-			/** .      draw_rectangle(&data, turn->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, RED);  . **/
-			/** .      curr = curr->next;  . **/
-			/** .  }  . **/
-		}
-		put_buffer_to_window(&data);
 	}
 	close_window(&data);
 	ma_engine_uninit(&engine);

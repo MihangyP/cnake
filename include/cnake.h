@@ -130,6 +130,7 @@ typedef struct {
 	bool	dead;
 	int		score;
 	t_font	font;
+	bool	started;
 }	t_data;
 
 char	*itoa(int integer);
