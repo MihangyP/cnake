@@ -22,9 +22,9 @@ Use arrow buttons to change direction, space to pause.
 
 ## TODO
 - [X] Font rendering
-- [ ] Add start menu
+- [X] Add start menu
 - [ ] Add levels
-- [ ] Implement a death screen
+- [X] Implement a death screen
 - [ ] Make the game more smooth
 - [X] Use nob.h to build the program
 - [X] Add sounds effects using miniaudio

@@ -27,73 +27,7 @@ bool	check_collision_recs(t_list *player)
 	return (collision);
 }
 
-void	make_window_not_resizable(t_data *data, size_t width, size_t height)
-{
-	XSizeHints	hints;
-
-	XGetWMNormalHints(data->display, data->window, &hints, NULL);
-	hints.width = width;
-	hints.height = height;
-	hints.min_width = width;
-	hints.min_height = height;
-	hints.max_width = width;
-	hints.max_height = height;
-	hints.flags = PPosition | PSize | PMinSize | PMaxSize;
-	XSetWMNormalHints(data->display, data->window, &hints);
-}
-
-void	init_window(t_data *data, size_t width, size_t height, const char *title,
-					int background_color)
-{
-	data->display = XOpenDisplay(NULL);
-	if (!data->display) {
-		trace_log(ERROR, "Cannot to connect to X11 Server");
-		exit(EXIT_FAILURE);
-	}
-	data->root = DefaultRootWindow(data->display);
-	int screen = DefaultScreen(data->display);
-	data->visual = DefaultVisual(data->display, screen);
-	data->depth = DefaultDepth(data->display, screen); 
-	data->window = XCreateSimpleWindow(data->display, data->root,
-					0, 0,
-					width, height,
-					0,
-					0, background_color);
-	data->gc = XCreateGC(data->display, data->window, 0, NULL);
-
-	data->wm_delete_window = XInternAtom(data->display, "WM_DELETE_WINDOW", False);
-	XSetWMProtocols(data->display, data->window, &data->wm_delete_window, 1);
-	XStoreName(data->display, data->window, title);
-	make_window_not_resizable(data, W_WIDTH, W_HEIGHT);
-	XSelectInput(data->display, data->window, KeyPressMask);
-	XMapWindow(data->display, data->window);
-	data->img = new_image(data, W_WIDTH, W_HEIGHT);
-	data->paused = false;
-	data->dead = false;
-	data->score = 0;
-	data->started = false;
-	trace_log(INFO, "Window initialised succesfully");
-	trace_log(INFO, "   > Window size: %d x %d", W_WIDTH, W_HEIGHT);
-}
-
-void	close_window(t_data *data)
-{
-	t_list *curr = data->player;
-	while (curr) {
-		t_list *tmp = curr;
-		curr = curr->next;
-		free(tmp->content);
-		free(tmp);
-	}
-	XDestroyImage(data->img->image);
-	free(data->img);
-	XFreeGC(data->display, data->gc);
-	XDestroyWindow(data->display, data->window);
-	XCloseDisplay(data->display);
-	trace_log(INFO, "Window closed succesfully");
-}
-
-void	draw_grid(t_data *data, t_color color1, t_color color2)
+void	draw_grid(t_game *game, t_color color1, t_color color2)
 {
 	size_t	x;
 	size_t 	y;
@@ -109,7 +43,7 @@ void	draw_grid(t_data *data, t_color color1, t_color color2)
 				grid_color = color1;
 			else
 				grid_color = color2;
-			draw_rectangle(data, (t_vector2){x, y}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, grid_color);
+			draw_rectangle(game, (t_vector2){x, y}, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, grid_color);
 			x += SQUARE_SIZE;
 			++tmp_x;
 		}
@@ -131,7 +65,7 @@ int	get_random_number(int min, int max)
 	return (result);
 }
 
-void	*new_image(t_data *data, int width, int height)
+void	*new_image(t_game *game, int width, int height)
 {
 	t_img	*img;
 
@@ -145,15 +79,14 @@ void	*new_image(t_data *data, int width, int height)
 		return (NULL);
 	}
 	bzero(img->data, size);
-	img->image = XCreateImage(data->display, data->visual, data->depth, ZPixmap,
+	img->image = XCreateImage(game->graphic.display, game->graphic.visual, game->graphic.depth, ZPixmap,
 					0, img->data, width, height, 32, 0);
 	img->gc = 0;
 	img->size_line = img->image->bytes_per_line;
 	img->bpp = img->image->bits_per_pixel;
 	img->width = width;
 	img->height = height;
-	img->pix = XCreatePixmap(data->display, data->root, width, height, data->depth);
-	/** .  XFlush(data->display);  . **/
+	img->pix = XCreatePixmap(game->graphic.display, game->graphic.root, width, height, game->graphic.depth);
 	return (img);
 }
 
@@ -165,61 +98,60 @@ void	color_pixel(t_img img, int x, int y, int color)
 	*(unsigned int *)(img.data + offset) = color;
 }
 
-void	put_buffer_to_window(t_data *data)
+void	put_buffer_to_window(t_game *game)
 {
-	XPutImage(data->display, data->img->pix, data->gc, data->img->image, 0, 0, 0, 0,
-			data->img->width, data->img->height);
-	XCopyArea(data->display, data->img->pix, data->window, data->gc,
-			0, 0, data->img->width, data->img->height, 0, 0);
-	/** .  XFlush(data->display);  . **/
+	XPutImage(game->graphic.display, game->img->pix, game->graphic.gc, game->img->image, 0, 0, 0, 0,
+			game->img->width, game->img->height);
+	XCopyArea(game->graphic.display, game->img->pix, game->graphic.window, game->graphic.gc,
+			0, 0, game->img->width, game->img->height, 0, 0);
 }
 
-void	clear_background(t_data *data, t_color color)
+void	clear_background(t_game *game, t_color color)
 {
 	for (size_t y = 0; y < W_HEIGHT; ++y) {
 		size_t x = 0;
 		for (; x < W_WIDTH; ++x)
-			color_pixel(*data->img, x, y, rgba_to_int(color));
+			color_pixel(*game->img, x, y, rgba_to_int(color));
 	}
 }
 
-void	draw_text(t_data *data, const char *text, size_t size, int x, int y, t_color color)
+void	draw_text(t_game *game, const char *text, size_t size, int x, int y, t_color color)
 {
-	FT_Set_Char_Size(data->font.face, 24 * 64, 0, size, 0);
+	FT_Set_Char_Size(game->font.face, 24 * 64, 0, size, 0);
 	for (size_t i = 0; text[i]; ++i) {
-		FT_Load_Char(data->font.face, text[i], FT_LOAD_RENDER);
-		FT_Bitmap *bitmap = &data->font.face->glyph->bitmap;
+		FT_Load_Char(game->font.face, text[i], FT_LOAD_RENDER);
+		FT_Bitmap *bitmap = &game->font.face->glyph->bitmap;
 		for (size_t row = 0; row < bitmap->rows; ++row) {
 			for (size_t col = 0; col < bitmap->width; ++col) {
 				if (bitmap->buffer[row * bitmap->width + col] > 128) {
-					color_pixel(*data->img, x + col, y + row, rgba_to_int(color));
+					color_pixel(*game->img, x + col, y + row, rgba_to_int(color));
 				}
 			}
 		}
-		x += data->font.face->glyph->advance.x >> 6;
+		x += game->font.face->glyph->advance.x >> 6;
 	}
 }
 
-void	render(t_data *data)
+void	render(t_game *game)
 {
-	if (!data->started) {
-		draw_text(data, "CNAKE", 150, W_WIDTH/2 - 90, 200, GOLD);
-		draw_text(data, "PRESS ENTER TO START", 69, W_WIDTH/2 - 140, 300, DONTOWHITE);
+	if (!game->state.started) {
+		draw_text(game, "CNAKE", 150, W_WIDTH/2 - 90, 200, GOLD);
+		draw_text(game, "PRESS ENTER TO START", 69, W_WIDTH/2 - 140, 300, DONTOWHITE);
 	} else {
-		if (!data->dead) {
-			draw_grid(data, (t_color){38, 38, 38, 255}, (t_color){24, 24, 24, 255});
-			t_list *curr = data->player;
+		if (!game->state.dead) {
+			draw_grid(game, (t_color){38, 38, 38, 255}, (t_color){24, 24, 24, 255});
+			t_list *curr = game->player;
 			t_cube *cube  = NULL;
 			while (curr) {
 				cube = (t_cube *)curr->content;
-				if (curr == data->player)
-					draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, (t_color){62, 151, 215, 255});
+				if (curr == game->player)
+					draw_rectangle(game, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, (t_color){62, 151, 215, 255});
 				else
-					draw_rectangle(data, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
+					draw_rectangle(game, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
 				curr = curr->next;
 			}
-			t_vector2	circle_pos = {data->collectible_position.x + SQUARE_SIZE/2, data->collectible_position.y + SQUARE_SIZE/2};
-			draw_circle(data, circle_pos, SQUARE_SIZE / 4, GOLD);
+			t_vector2	circle_pos = {game->collectible_position.x + SQUARE_SIZE/2, game->collectible_position.y + SQUARE_SIZE/2};
+			draw_circle(game, circle_pos, SQUARE_SIZE / 4, GOLD);
 			char score_text[69];
 			bzero(score_text, 69);
 			score_text[0] = 's';
@@ -229,26 +161,26 @@ void	render(t_data *data)
 			score_text[4] = 'e';
 			score_text[5] = ':';
 			score_text[6] = ' ';
-			strcat(score_text, itoa(data->score));
-			draw_text(data, score_text, 69, 469, 20, DONTOWHITE);
-			if (data->paused) {
-				draw_pause_icon(data, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
+			strcat(score_text, itoa(game->state.score));
+			draw_text(game, score_text, 69, 469, 20, DONTOWHITE);
+			if (game->state.paused) {
+				draw_pause_icon(game, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
 						(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
 			}
 		} else {
-			draw_text(data, "DEAD", 69, W_WIDTH/2 - 40, W_HEIGHT/2 - 20, DONTOWHITE);
+			draw_text(game, "DEAD", 69, W_WIDTH/2 - 40, W_HEIGHT/2 - 20, DONTOWHITE);
 		}
 	}
-	put_buffer_to_window(data);
+	put_buffer_to_window(game);
 }
 
-void	add_cube(t_data *data)
+void	add_cube(t_game *game)
 {
-	t_list *last = list_last(data->player);
+	t_list *last = list_last(game->player);
 	t_cube *tmp = malloc(sizeof(t_cube));
 	if (!tmp) {
 		trace_log(ERROR, "Malloc error");
-		close_window(data);
+		close_window(game);
 	}
 
 	t_cube *last_content = (t_cube*)last->content;
@@ -270,10 +202,10 @@ void	add_cube(t_data *data)
 		tmp->direction = RIGHT;
 	}
 	t_list *new = list_new(tmp);
-	list_add_back(&data->player, new);
+	list_add_back(&game->player, new);
 }
 
-void	init_player(t_data *data)
+void	init_player(t_game *game)
 {
 	int	tab[NUMBER_OF_SQUARE];
 	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
@@ -282,7 +214,7 @@ void	init_player(t_data *data)
 	t_cube	*head = malloc(sizeof(t_cube));
 	if (!head) {
 		trace_log(ERROR, "Malloc error");
-		close_window(data);
+		close_window(game);
 	}
 	srand(time(NULL));
 	head->position.x = tab[get_random_number(0, NUMBER_OF_SQUARE)];
@@ -297,10 +229,10 @@ void	init_player(t_data *data)
 	else if (head->direction == DOWN && head->position.y < SQUARE_SIZE * (INITIAL_SNAQUE_SIZE - 1))
 		head->position.y = SQUARE_SIZE * (INITIAL_SNAQUE_SIZE - 1);
 	t_list	*new = list_new(head);
-	list_add_back(&data->player, new);
+	list_add_back(&game->player, new);
 
-	add_cube(data);
-	add_cube(data);
+	add_cube(game);
+	add_cube(game);
 }
 
 t_turn	*create_new_turn(t_cube cube)
@@ -338,6 +270,157 @@ t_vector2	generate_random_collectible_position(t_list *player, int tab[])
 	return (result);
 }
 
+bool	init_sound(t_sound *sound)
+{
+	if (ma_engine_init(NULL, &sound->engine) != MA_SUCCESS) {
+		trace_log(ERROR, "Cannot init ma_engine");
+		return (false);
+	}
+	return (true);
+}
+
+bool	init_font(t_font *font)
+{
+	const char *faces[] = {
+		"./resources/pixantiqua.ttf"
+	};
+
+	if (FT_Init_FreeType(&font->library)) {
+		trace_log(ERROR, "Cannot init FreeType");
+		return (false);
+	}
+	for (size_t i = 0; i < ARRAY_LEN(faces); ++i) {
+		if (FT_New_Face(font->library, faces[i], 0, &font->face)) {
+			trace_log(ERROR, "Cannot create new face");
+			return (false);
+		}
+	}
+	return (true);
+}
+
+void	clean_sound(t_sound *sound)
+{
+	ma_engine_uninit(&sound->engine);
+}
+
+void	clean_font(t_font *font)
+{
+	FT_Done_Face(font->face);
+	FT_Done_FreeType(font->library);
+}
+
+void	handle_events(t_game *game)
+{
+	XEvent	event;
+	XNextEvent(game->graphic.display, &event);
+
+	if (event.type == KeyPress)
+	{
+		KeySym keysym = XLookupKeysym(&event.xkey, 0);
+		if (keysym == XK_Escape)
+			game->state.window_should_close = true;
+		else if (game->state.started && !game->state.dead && keysym == XK_space)
+			game->state.paused = !game->state.paused;
+		else if (!game->state.started && keysym == XK_Return) {
+			game->state.started = true;
+		} else if (game->state.started && !game->state.dead && !game->state.paused) {
+			t_cube *cube = (t_cube*)game->player->content;
+			t_turn *turn;
+			t_list *new;
+			if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
+				cube->direction = LEFT;
+				turn = create_new_turn(*cube);
+				new = list_new(turn);
+				list_add_back(&game->to_turns, new);
+			} else if (keysym == XK_Right && cube->direction != RIGHT && cube->direction != LEFT) {
+				cube->direction = RIGHT;
+				turn = create_new_turn(*cube);
+				new = list_new(turn);
+				list_add_back(&game->to_turns, new);
+			} else if (keysym == XK_Up && cube->direction != UP && cube->direction != DOWN) {
+				cube->direction = UP;
+				turn = create_new_turn(*cube);
+				new = list_new(turn);
+				list_add_back(&game->to_turns, new);
+			} else if (keysym == XK_Down && cube->direction != DOWN && cube->direction != UP ) {
+				cube->direction = DOWN;
+				turn = create_new_turn(*cube);
+				new = list_new(turn);
+				list_add_back(&game->to_turns, new);
+			}
+		}
+	}
+	else if (event.type == ClientMessage) {
+		if ((Atom)event.xclient.data.l[0] == game->graphic.wm_delete_window)
+			game->state.window_should_close = true;
+	}
+}
+
+void	update_game(t_game *game)
+{
+	if (game->state.started && !game->state.dead && !game->state.paused) {
+		game->end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
+		if (game->end - game->start >= 160) {
+			t_list *curr = game->player;
+			while (curr) {
+				t_cube *cube = (t_cube *)curr->content;
+				if (game->to_turns) {
+					t_list *curr2 = game->to_turns;
+					while (curr2) {
+						t_turn *turn = (t_turn *)curr2->content;
+						if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
+							++turn->nb_collision;
+							cube->direction = turn->direction;
+							if (turn->nb_collision >= (int)list_size(game->player)) {
+								list_del_front(&game->to_turns);
+								break ;
+							}
+						}
+						curr2 = curr2->next;
+					}
+				}
+				curr = curr->next;
+			}
+
+			curr = game->player;
+			for (; curr; curr = curr->next) {
+				t_cube	*cube = (t_cube *)curr->content;
+				if (cube->direction == UP) cube->position.y -= SQUARE_SIZE;
+				if (cube->direction == DOWN) cube->position.y += SQUARE_SIZE;
+				if (cube->direction == LEFT) cube->position.x -= SQUARE_SIZE;
+				if (cube->direction == RIGHT) cube->position.x += SQUARE_SIZE;
+			}
+			game->start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
+		}
+		t_cube *tmp = (t_cube *)game->player->content;
+		if (check_collision_rec_circle(tmp->position, game->collectible_position)) {
+			ma_engine_play_sound(&game->sound.engine, "./resources/coin.wav", NULL);
+			game->collectible_position = generate_random_collectible_position(game->player, game->tab);
+			++game->state.score;
+			add_cube(game);
+		}
+
+		if (check_collision_recs(game->player))
+			game->state.dead = true;
+
+		// To make snake pass through the walls
+		t_list *curr = game->player;
+		while (curr) {
+			t_cube *tmp = (t_cube *)curr->content;
+			if (tmp->position.x > W_WIDTH) {
+				tmp->position.x = 0;
+			} else if (tmp->position.x < 0) {
+				tmp->position.x = W_WIDTH;
+			} else if (tmp->position.y > W_HEIGHT) {
+				tmp->position.y = 0;
+			} else if (tmp->position.y < 0) {
+				tmp->position.y = W_HEIGHT;
+			}
+			curr = curr->next;
+		}
+	}
+}
+
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
 // TODO: fix bug: sometimes, all the to_turns are not removed
@@ -345,151 +428,37 @@ t_vector2	generate_random_collectible_position(t_list *player, int tab[])
 // TODO: fix bug: death checking is not exactly right
 int	main(void)
 {
-	t_data	data;
-	bool	window_should_close = false;
-	// For sounds
-	ma_engine	engine;
-	if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
-		trace_log(ERROR, "Cannot init ma_engine");
-		return (1);
-	}
-	//
-	// For font
-	if (FT_Init_FreeType(&data.font.library)) {
-		trace_log(ERROR, "Cannot init FreeType");
-		return (1);
-	}
-	if (FT_New_Face(data.font.library, "./resources/pixantiqua.ttf", 0, &data.font.face)) {
-		trace_log(ERROR, "Cannot create new face");
-		return (1);
-	}
-	//
-	init_window(&data, W_WIDTH, W_HEIGHT, "Cnake", 0x00181818);
-	data.player = NULL;
-	init_player(&data);
+	t_game	game = {0};
 
-	t_list *to_turns = NULL;
-
-	// target
-	int	tab[NUMBER_OF_SQUARE];
+	// Initialisation
+	init_window(&game, W_WIDTH, W_HEIGHT, "Cnake", 0x00181818);
+	game.player = NULL;
+	init_player(&game);
+	if (!init_sound(&game.sound)) {
+		close_window(&game);
+		return (1);
+	}
+	if (!init_font(&game.font)) {
+		clean_sound(&game.sound);
+		return (1);
+	}
 	for (size_t i = 0, j = 0; i < NUMBER_OF_SQUARE; ++i, j += SQUARE_SIZE)
-		tab[i] = j;
-	data.collectible_position = generate_random_collectible_position(data.player, tab);
-	//
+		game.tab[i] = j;
+	game.collectible_position = generate_random_collectible_position(game.player, game.tab);
 
-	XEvent event;
-	double start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-	while (!window_should_close) {
-		while (XPending(data.display)) {
-			XNextEvent(data.display, &event);
-			if (event.type == KeyPress) {
-				KeySym keysym = XLookupKeysym(&event.xkey, 0);
-				if (keysym == XK_Escape)
-					window_should_close = true;
-				else if (keysym == XK_space && data.started && !data.dead)
-					data.paused = !data.paused;
-				else if (!data.started) {
-					if (keysym == XK_Return)
-						data.started = true;
-				} else if (data.started && !data.dead && !data.paused) {
-					t_cube *cube = (t_cube*)data.player->content;
-					if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
-						cube->direction = LEFT;
-						t_turn *turn = create_new_turn(*cube);
-						t_list *new = list_new(turn);
-						list_add_back(&to_turns, new);
-					} else if (keysym == XK_Right && cube->direction != RIGHT && cube->direction != LEFT) {
-						cube->direction = RIGHT;
-						t_turn *turn = create_new_turn(*cube);
-						t_list *new = list_new(turn);
-						list_add_back(&to_turns, new);
-					} else if (keysym == XK_Up && cube->direction != UP && cube->direction != DOWN) {
-						cube->direction = UP;
-						t_turn *turn = create_new_turn(*cube);
-						t_list *new = list_new(turn);
-						list_add_back(&to_turns, new);
-					} else if (keysym == XK_Down && cube->direction != DOWN && cube->direction != UP ) {
-						cube->direction = DOWN;
-						t_turn *turn = create_new_turn(*cube);
-						t_list *new = list_new(turn);
-						list_add_back(&to_turns, new);
-					}
-				}
-			} else if (event.type == ClientMessage) {
-				if ((Atom)event.xclient.data.l[0] == data.wm_delete_window)
-					window_should_close = true;
-			}
+	game.start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
+	while (!game.state.window_should_close) {
+		while (XPending(game.graphic.display)) {
+			handle_events(&game);
 		}
-
-		clear_background(&data, (t_color){24, 24, 24, 255});
-		// Update data
-		if (data.started && !data.dead && !data.paused) {
-			double end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-			if (end - start >= 160) {
-				t_list *curr = data.player;
-				while (curr) {
-					t_cube *cube = (t_cube *)curr->content;
-					if (to_turns) {
-						t_list *curr2 = to_turns;
-						while (curr2) {
-							t_turn *turn = (t_turn *)curr2->content;
-							if (cube->position.x == turn->position.x && cube->position.y == turn->position.y) {
-								++turn->nb_collision;
-								cube->direction = turn->direction;
-								if (turn->nb_collision >= (int)list_size(data.player)) {
-									list_del_front(&to_turns);
-									break ;
-								}
-							}
-							curr2 = curr2->next;
-						}
-					}
-					curr = curr->next;
-				}
-
-				curr = data.player;
-				for (; curr; curr = curr->next) {
-					t_cube	*cube = (t_cube *)curr->content;
-					if (cube->direction == UP) cube->position.y -= SQUARE_SIZE;
-					if (cube->direction == DOWN) cube->position.y += SQUARE_SIZE;
-					if (cube->direction == LEFT) cube->position.x -= SQUARE_SIZE;
-					if (cube->direction == RIGHT) cube->position.x += SQUARE_SIZE;
-				}
-				start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-			}
-			t_cube *tmp = (t_cube *)data.player->content;
-			if (check_collision_rec_circle(tmp->position, data.collectible_position)) {
-				ma_engine_play_sound(&engine, "./resources/coin.wav", NULL);
-				data.collectible_position = generate_random_collectible_position(data.player, tab);
-				++data.score;
-				add_cube(&data);
-			}
-
-			if (check_collision_recs(data.player))
-				data.dead = true;
-
-			// To make snake pass through the walls
-			t_list *curr = data.player;
-			while (curr) {
-				t_cube *tmp = (t_cube *)curr->content;
-				if (tmp->position.x > W_WIDTH) {
-					tmp->position.x = 0;
-				} else if (tmp->position.x < 0) {
-					tmp->position.x = W_WIDTH;
-				} else if (tmp->position.y > W_HEIGHT) {
-					tmp->position.y = 0;
-				} else if (tmp->position.y < 0) {
-					tmp->position.y = W_HEIGHT;
-				}
-				curr = curr->next;
-			}
-		}
-
-		render(&data);
+		update_game(&game);
+		clear_background(&game, (t_color){24, 24, 24, 255});
+		render(&game);
 	}
-	close_window(&data);
-	ma_engine_uninit(&engine);
-	FT_Done_Face(data.font.face);
-	FT_Done_FreeType(data.font.library);
+
+	// Cleaning
+	clean_font(&game.font);
+	clean_sound(&game.sound);
+	close_window(&game);
 	return (0);
 }

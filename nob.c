@@ -35,7 +35,8 @@ int	main(int ac, char **av)
 		SRC_FOLDER"trace_log.c",
 		SRC_FOLDER"list.c",
 		SRC_FOLDER"itoa.c",
-		SRC_FOLDER"rgba.c"
+		SRC_FOLDER"rgba.c",
+		SRC_FOLDER"graphics.c"
 	};
 	size_t	src_files_size = sizeof(src_files) / sizeof(src_files[0]);
 

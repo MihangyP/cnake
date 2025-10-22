@@ -1,6 +1,6 @@
 #include "cnake.h"
 
-void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color)
+void	draw_line(t_game *game, t_vector2 p1, t_vector2 p2, t_color color)
 {
 	float		dx;
 	float		dy;
@@ -18,14 +18,14 @@ void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color)
 	int i = 0;
 	while (i < step) {
 		if (p1.x >= 0 && p1.x < W_WIDTH && p1.y >= 0 && p1.y < W_HEIGHT)
-			color_pixel(*data->img, p1.x, p1.y, rgba_to_int(color));
+			color_pixel(*game->img, p1.x, p1.y, rgba_to_int(color));
 		p1.x += inc_x;
 		p1.y += inc_y;
 		++i;
 	}
 }
 
-void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size, t_color color)
+void	draw_rectangle(t_game *game, t_vector2 start, t_vector2 size, t_color color)
 {
 	t_vector2	end;
 
@@ -38,13 +38,13 @@ void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size, t_color color
 			start.x = tmp;
 			for (; start.x <= end.x; ++start.x) {
 				if (start.x >= 0 && start.x < W_WIDTH)
-					color_pixel(*data->img, start.x, start.y, rgba_to_int(color));
+					color_pixel(*game->img, start.x, start.y, rgba_to_int(color));
 			}
 		}
 	}
 }
 
-void	draw_circle(t_data *data, t_vector2 center, int radius, t_color color)
+void	draw_circle(t_game *game, t_vector2 center, int radius, t_color color)
 {
 	t_vector2	start = {
 		center.x - radius,
@@ -59,7 +59,7 @@ void	draw_circle(t_data *data, t_vector2 center, int radius, t_color color)
 					int dx = i - center.x;
 					int dy = j - center.y;
 					if (sqrt(dx * dx + dy * dy) <= (float)radius)
-						color_pixel(*data->img, i, j, rgba_to_int(color));
+						color_pixel(*game->img, i, j, rgba_to_int(color));
 				}
 			}
 		}
@@ -67,12 +67,12 @@ void	draw_circle(t_data *data, t_vector2 center, int radius, t_color color)
 }
 
 // TODO: update this to draw_triangle
-void	draw_pause_icon(t_data *data, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color)
+void	draw_pause_icon(t_game *game, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color)
 {
-	draw_line(data, p1, p2, color);	
-	draw_line(data, p1, p3, color);	
-	draw_line(data, p2, p3, color);	
+	draw_line(game, p1, p2, color);	
+	draw_line(game, p1, p3, color);	
+	draw_line(game, p2, p3, color);	
 	
 	for (int y = p1.y; y < p2.y; ++y)
-		draw_line(data, (t_vector2){p1.x, y}, p3, color);	
+		draw_line(game, (t_vector2){p1.x, y}, p3, color);	
 }

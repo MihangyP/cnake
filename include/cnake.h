@@ -13,12 +13,15 @@
 #include <X11/keysym.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "../miniaudio/miniaudio.h"
 
 #define W_WIDTH 600
 #define W_HEIGHT W_WIDTH
 #define NUMBER_OF_SQUARE 20
 #define SQUARE_SIZE (W_WIDTH / NUMBER_OF_SQUARE)
 #define INITIAL_SNAQUE_SIZE 3
+
+#define ARRAY_LEN(array) sizeof array / sizeof array[0]
 
 // TODO: implement my own hash table
 
@@ -123,15 +126,54 @@ typedef struct {
 	Visual	*visual;
 	int		depth;
 	Atom	wm_delete_window;
-	t_img	*img;
-	t_list	*player;
-	t_vector2 collectible_position;
+}	t_graphic;
+
+typedef struct {
+	ma_engine	engine;	
+}	t_sound;
+
+typedef struct {
 	bool	paused;
 	bool	dead;
-	int		score;
-	t_font	font;
 	bool	started;
-}	t_data;
+	bool	window_should_close;
+	int		score;
+}	t_state;
+
+typedef struct {
+	t_graphic	graphic;
+	t_img		*img;
+	t_sound		sound;
+	t_font		font;
+	t_state		state;
+	t_list		*player;
+	t_vector2 	collectible_position;
+	t_list		*to_turns;
+	double		start;
+	double		end;
+	int			tab[NUMBER_OF_SQUARE];
+}	t_game;
+
+// typedef struct {
+//     Display	*display;
+//     Window	window;
+//     GC		gc;
+//     Window	root;
+//     Visual	*visual;
+//     int		depth;
+//     Atom	wm_delete_window;
+//     t_img	*img;
+//     t_list	*player;
+//     t_vector2 collectible_position;
+//     bool	paused;
+//     bool	dead;
+//     int		score;
+//     t_font	font;
+//     bool	started;
+// }	t_game;
+
+void	init_window(t_game *game, size_t width, size_t height, const char *title, int background_color);
+void	close_window(t_game *game);
 
 char	*itoa(int integer);
 void	trace_log(t_log_level log_level, const char *format, ...);
@@ -147,10 +189,10 @@ size_t	list_size(t_list *list);
 void	list_print(t_list *list);
 
 // shapes
-void	draw_line(t_data *data, t_vector2 p1, t_vector2 p2, t_color color);
-void	draw_rectangle(t_data *data, t_vector2 start, t_vector2 size, t_color color);
-void	draw_circle(t_data *data, t_vector2 center, int radius, t_color color);
-void	draw_pause_icon(t_data *data, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color);
+void	draw_line(t_game *game, t_vector2 p1, t_vector2 p2, t_color color);
+void	draw_rectangle(t_game *game, t_vector2 start, t_vector2 size, t_color color);
+void	draw_circle(t_game *game, t_vector2 center, int radius, t_color color);
+void	draw_pause_icon(t_game *game, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color);
 
 // rgba
 int		rgba_to_int(t_color color);
@@ -160,5 +202,5 @@ t_color	color_alpha(t_color color, float alpha);
 // color pixel
 void	color_pixel(t_img img, int x, int y, int color);
 // image
-void	*new_image(t_data *data, int width, int height);
-void	put_buffer_to_window(t_data *data);
+void	*new_image(t_game *game, int width, int height);
+void	put_buffer_to_window(t_game *game);
