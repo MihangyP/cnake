@@ -16,8 +16,8 @@ Use arrow buttons to change direction, space to pause.
 
 ## External dependencies:
 - Xlib - for graphics rendering
-- miniaudio - for sound effects
-- NoBuild (or nob) - to build the project
+- miniaudio - for sound effects 
+- (NoBuild)[https://github.com/tsoding/nob.h] (or nob) - to build the project 
 - FreeType - for font rendering
 
 ## TODO
