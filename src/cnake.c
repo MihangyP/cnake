@@ -1,6 +1,7 @@
-#include "cnake.h"
 #define MA_IMPLEMENTATION
-#include "../miniaudio/miniaudio.h"
+#include "cnake.h"
+
+#define SPEED 3
 
 bool	check_collision_rec_circle(t_vector2 rec, t_vector2 center)
 {
@@ -150,6 +151,9 @@ void	render(t_game *game)
 					draw_rectangle(game, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
 				curr = curr->next;
 			}
+			/** .  t_cube *head = (t_cube *)game->player->content;  . **/
+			/** .  draw_rectangle_outline(game, head->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, RED);  . **/
+
 			t_vector2	circle_pos = {game->collectible_position.x + SQUARE_SIZE/2, game->collectible_position.y + SQUARE_SIZE/2};
 			draw_circle(game, circle_pos, SQUARE_SIZE / 4, GOLD);
 			char score_text[69];
@@ -168,6 +172,7 @@ void	render(t_game *game)
 						(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
 			}
 		} else {
+			// TODO: implement a cool dead screen instead of just text
 			draw_text(game, "DEAD", 69, W_WIDTH/2 - 40, W_HEIGHT/2 - 20, DONTOWHITE);
 		}
 	}
@@ -356,11 +361,15 @@ void	handle_events(t_game *game)
 	}
 }
 
+/** .  60frames -> 1s  . **/
+/** .  1frame-> 1/60=0.016s  . **/
+
 void	update_game(t_game *game)
 {
 	if (game->state.started && !game->state.dead && !game->state.paused) {
 		game->end = (clock() / (float)CLOCKS_PER_SEC) * 1000;
-		if (game->end - game->start >= 160) {
+		if (game->end - game->start >= 160)
+		{
 			t_list *curr = game->player;
 			while (curr) {
 				t_cube *cube = (t_cube *)curr->content;
@@ -424,7 +433,7 @@ void	update_game(t_game *game)
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
 // TODO: fix bug: sometimes, all the to_turns are not removed
-// TODO: optimze the codeA
+// TODO: optimze the code
 // TODO: fix bug: death checking is not exactly right
 int	main(void)
 {
@@ -446,6 +455,7 @@ int	main(void)
 		game.tab[i] = j;
 	game.collectible_position = generate_random_collectible_position(game.player, game.tab);
 
+	// event loop
 	game.start = (clock() / (float)CLOCKS_PER_SEC) * 1000;
 	while (!game.state.window_should_close) {
 		while (XPending(game.graphic.display)) {

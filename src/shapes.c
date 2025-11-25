@@ -25,6 +25,19 @@ void	draw_line(t_game *game, t_vector2 p1, t_vector2 p2, t_color color)
 	}
 }
 
+void	draw_rectangle_outline(t_game *game, t_vector2 start, t_vector2 size, t_color color)
+{
+	t_vector2	top_left = start;
+	t_vector2	top_right = (t_vector2){start.x + size.x, start.y};
+	t_vector2	bottom_left = (t_vector2){start.x, start.y + size.y};
+	t_vector2	bottom_right = (t_vector2){start.x + size.x, start.y + size.y};
+
+	draw_line(game, top_left, top_right, color);
+	draw_line(game, bottom_left, bottom_right, color);
+	draw_line(game, top_left, bottom_left, color);
+	draw_line(game, top_right, bottom_right, color);
+}
+
 void	draw_rectangle(t_game *game, t_vector2 start, t_vector2 size, t_color color)
 {
 	t_vector2	end;

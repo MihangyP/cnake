@@ -69,5 +69,6 @@ void	close_window(t_game *game)
 	XFreeGC(game->graphic.display, game->graphic.gc);
 	XDestroyWindow(game->graphic.display, game->graphic.window);
 	XCloseDisplay(game->graphic.display);
+	printf("DISPLAY: %p\n", game->graphic.display);
 	trace_log(INFO, "Window closed succesfully");
 }

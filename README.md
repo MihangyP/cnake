@@ -28,3 +28,5 @@ Use arrow buttons to change direction, space to pause.
 - [ ] Make the game more smooth
 - [X] Use nob.h to build the program
 - [X] Add sounds effects using miniaudio
+- [ ] Remove leaks 
+- [ ] Optimize the code (speed and memory)

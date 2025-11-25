@@ -154,24 +154,6 @@ typedef struct {
 	int			tab[NUMBER_OF_SQUARE];
 }	t_game;
 
-// typedef struct {
-//     Display	*display;
-//     Window	window;
-//     GC		gc;
-//     Window	root;
-//     Visual	*visual;
-//     int		depth;
-//     Atom	wm_delete_window;
-//     t_img	*img;
-//     t_list	*player;
-//     t_vector2 collectible_position;
-//     bool	paused;
-//     bool	dead;
-//     int		score;
-//     t_font	font;
-//     bool	started;
-// }	t_game;
-
 void	init_window(t_game *game, size_t width, size_t height, const char *title, int background_color);
 void	close_window(t_game *game);
 
@@ -190,6 +172,7 @@ void	list_print(t_list *list);
 
 // shapes
 void	draw_line(t_game *game, t_vector2 p1, t_vector2 p2, t_color color);
+void	draw_rectangle_outline(t_game *game, t_vector2 start, t_vector2 size, t_color color);
 void	draw_rectangle(t_game *game, t_vector2 start, t_vector2 size, t_color color);
 void	draw_circle(t_game *game, t_vector2 center, int radius, t_color color);
 void	draw_pause_icon(t_game *game, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color);
