@@ -160,6 +160,9 @@ void	close_window(t_game *game);
 char	*itoa(int integer);
 void	trace_log(t_log_level log_level, const char *format, ...);
 
+// utils
+t_turn	*create_new_turn(t_cube cube);
+
 // list
 t_list	*list_new(void *content);
 void	list_add_front(t_list **list, t_list *new_element);
@@ -176,6 +179,9 @@ void	draw_rectangle_outline(t_game *game, t_vector2 start, t_vector2 size, t_col
 void	draw_rectangle(t_game *game, t_vector2 start, t_vector2 size, t_color color);
 void	draw_circle(t_game *game, t_vector2 center, int radius, t_color color);
 void	draw_pause_icon(t_game *game, t_vector2 p1, t_vector2 p2, t_vector2 p3, t_color color);
+
+// events
+void	handle_events(t_game *game);
 
 // rgba
 int		rgba_to_int(t_color color);

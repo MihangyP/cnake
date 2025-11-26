@@ -1,7 +1,7 @@
 #define MA_IMPLEMENTATION
 #include "cnake.h"
-
-#define SPEED 3
+#define NOB_IMPLEMENTATION
+#include "../nob.h"
 
 bool	check_collision_rec_circle(t_vector2 rec, t_vector2 center)
 {
@@ -151,22 +151,18 @@ void	render(t_game *game)
 					draw_rectangle(game, cube->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, SKYBLUE);
 				curr = curr->next;
 			}
-			/** .  t_cube *head = (t_cube *)game->player->content;  . **/
-			/** .  draw_rectangle_outline(game, head->position, (t_vector2){SQUARE_SIZE, SQUARE_SIZE}, RED);  . **/
 
 			t_vector2	circle_pos = {game->collectible_position.x + SQUARE_SIZE/2, game->collectible_position.y + SQUARE_SIZE/2};
 			draw_circle(game, circle_pos, SQUARE_SIZE / 4, GOLD);
-			char score_text[69];
-			bzero(score_text, 69);
-			score_text[0] = 's';
-			score_text[1] = 'c';
-			score_text[2] = 'o';
-			score_text[3] = 'r';
-			score_text[4] = 'e';
-			score_text[5] = ':';
-			score_text[6] = ' ';
-			strcat(score_text, itoa(game->state.score));
-			draw_text(game, score_text, 69, 469, 20, DONTOWHITE);
+			
+			/* render score text */
+			Nob_String_Builder	score = {0};
+            nob_sb_append_cstr(&score, "score: ");
+			nob_sb_append_cstr(&score, itoa(game->state.score));
+			nob_sb_append_null(&score);
+			draw_text(game, score.items, 69, 469, 20, DONTOWHITE);
+			/* --------------- */
+
 			if (game->state.paused) {
 				draw_pause_icon(game, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
 						(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
@@ -313,56 +309,6 @@ void	clean_font(t_font *font)
 	FT_Done_Face(font->face);
 	FT_Done_FreeType(font->library);
 }
-
-void	handle_events(t_game *game)
-{
-	XEvent	event;
-	XNextEvent(game->graphic.display, &event);
-
-	if (event.type == KeyPress)
-	{
-		KeySym keysym = XLookupKeysym(&event.xkey, 0);
-		if (keysym == XK_Escape)
-			game->state.window_should_close = true;
-		else if (game->state.started && !game->state.dead && keysym == XK_space)
-			game->state.paused = !game->state.paused;
-		else if (!game->state.started && keysym == XK_Return) {
-			game->state.started = true;
-		} else if (game->state.started && !game->state.dead && !game->state.paused) {
-			t_cube *cube = (t_cube*)game->player->content;
-			t_turn *turn;
-			t_list *new;
-			if (keysym == XK_Left && cube->direction != LEFT && cube->direction != RIGHT) {
-				cube->direction = LEFT;
-				turn = create_new_turn(*cube);
-				new = list_new(turn);
-				list_add_back(&game->to_turns, new);
-			} else if (keysym == XK_Right && cube->direction != RIGHT && cube->direction != LEFT) {
-				cube->direction = RIGHT;
-				turn = create_new_turn(*cube);
-				new = list_new(turn);
-				list_add_back(&game->to_turns, new);
-			} else if (keysym == XK_Up && cube->direction != UP && cube->direction != DOWN) {
-				cube->direction = UP;
-				turn = create_new_turn(*cube);
-				new = list_new(turn);
-				list_add_back(&game->to_turns, new);
-			} else if (keysym == XK_Down && cube->direction != DOWN && cube->direction != UP ) {
-				cube->direction = DOWN;
-				turn = create_new_turn(*cube);
-				new = list_new(turn);
-				list_add_back(&game->to_turns, new);
-			}
-		}
-	}
-	else if (event.type == ClientMessage) {
-		if ((Atom)event.xclient.data.l[0] == game->graphic.wm_delete_window)
-			game->state.window_should_close = true;
-	}
-}
-
-/** .  60frames -> 1s  . **/
-/** .  1frame-> 1/60=0.016s  . **/
 
 void	update_game(t_game *game)
 {

@@ -15,10 +15,10 @@ $ ./build/cnake
 Use arrow buttons to change direction, space to pause.
 
 ## External dependencies:
-- [Xlib](https://www.x.org/releases/current/doc/libX11/libX11/libX11.html) - for graphics rendering
-- [miniaudio](https://github.com/mackron/miniaudio) - for sound effects 
-- [NoBuild (or nob)](https://github.com/tsoding/nob.h) - to build the project
-- [FreeType ](https://github.com/freetype/freetype) - for font rendering
+- Xlib - for graphics rendering
+- miniaudio - for sound effects
+- NoBuild (or nob) - to build the project
+- FreeType - for font rendering
 
 ## TODO
 - [X] Font rendering
