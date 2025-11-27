@@ -15,9 +15,6 @@ bool	check_collision_recs(t_list *player)
 	int	x_head = head->position.x;
 	int	y_head = head->position.y;
 
-	if (head->direction == RIGHT) x_head += SQUARE_SIZE;
-	if (head->direction == DOWN) y_head += SQUARE_SIZE;
-
 	t_list *curr = player->next;
 	while (curr) {
 		t_cube *cube = (t_cube *)curr->content;
@@ -355,9 +352,6 @@ void	update_game(t_game *game)
 			add_cube(game);
 		}
 
-		if (check_collision_recs(game->player))
-			game->state.dead = true;
-
 		// To make snake pass through the walls
 		t_list *curr = game->player;
 		while (curr) {
@@ -380,7 +374,6 @@ void	update_game(t_game *game)
 // TODO: fix bugs: infinite loop, target position
 // TODO: fix bug: sometimes, all the to_turns are not removed
 // TODO: optimze the code
-// TODO: fix bug: death checking is not exactly right
 int	main(void)
 {
 	t_game	game = {0};
@@ -407,9 +400,11 @@ int	main(void)
 		while (XPending(game.graphic.display)) {
 			handle_events(&game);
 		}
-		update_game(&game);
 		clear_background(&game, (t_color){24, 24, 24, 255});
 		render(&game);
+		update_game(&game);
+		if (check_collision_recs(game.player))
+			game.state.dead = true;
 	}
 
 	// Cleaning
