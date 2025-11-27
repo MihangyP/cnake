@@ -90,7 +90,7 @@ void	*new_image(t_game *game, int width, int height)
 
 void	color_pixel(t_img img, int x, int y, int color)
 {
-	int	offset;
+	int	offset = 0;
 
 	offset = (y * img.size_line) + (x * (img.bpp / 8));
 	*(unsigned int *)(img.data + offset) = color;
@@ -155,9 +155,13 @@ void	render(t_game *game)
 			/* render score text */
 			Nob_String_Builder	score = {0};
             nob_sb_append_cstr(&score, "score: ");
-			nob_sb_append_cstr(&score, itoa(game->state.score));
+			char *score_string = itoa(game->state.score);
+			nob_sb_append_cstr(&score, score_string);
 			nob_sb_append_null(&score);
 			draw_text(game, score.items, 69, 469, 20, DONTOWHITE);
+			nob_sb_free(score);
+			memset(&score, 0, sizeof(score));
+			free(score_string);
 			/* --------------- */
 
 			if (game->state.paused) {
@@ -373,14 +377,13 @@ void	update_game(t_game *game)
 // TODO: remove conditional jumps on rendering
 // TODO: fix bugs: infinite loop, target position
 // TODO: fix bug: sometimes, all the to_turns are not removed
-// TODO: optimze the code
+// TODO: optimize the code
 int	main(void)
 {
 	t_game	game = {0};
 
 	// Initialisation
 	init_window(&game, W_WIDTH, W_HEIGHT, "Cnake", 0x00181818);
-	game.player = NULL;
 	init_player(&game);
 	if (!init_sound(&game.sound)) {
 		close_window(&game);

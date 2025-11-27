@@ -2,7 +2,7 @@
 
 void	handle_events(t_game *game)
 {
-	XEvent	event;
+	XEvent	event = {0};
 	XNextEvent(game->graphic.display, &event);
 
 	if (event.type == KeyPress)

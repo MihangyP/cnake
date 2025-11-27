@@ -41,6 +41,7 @@ void	list_free(t_list *list)
 	while (list) {
 		tmp = list;
 		list = list->next;
+		free(tmp->content);
 		free(tmp);
 	}
 }

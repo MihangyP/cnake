@@ -2,7 +2,7 @@
 
 void	make_window_not_resizable(t_game *game, size_t width, size_t height)
 {
-	XSizeHints	hints;
+	XSizeHints	hints = {0};
 
 	XGetWMNormalHints(game->graphic.display, game->graphic.window, &hints, NULL);
 	hints.width = width;
@@ -42,6 +42,7 @@ void	init_window(t_game *game, size_t width, size_t height, const char *title, i
 	game->img = new_image(game, W_WIDTH, W_HEIGHT);
 
 	game->to_turns = NULL;
+	game->player = NULL;
 
 	// States
 	game->state.paused = false;
@@ -65,10 +66,14 @@ void	close_window(t_game *game)
 		free(tmp);
 	}
 	XDestroyImage(game->img->image);
+	XFreePixmap(game->graphic.display, game->img->pix);
 	free(game->img);
 	XFreeGC(game->graphic.display, game->graphic.gc);
 	XDestroyWindow(game->graphic.display, game->graphic.window);
 	XCloseDisplay(game->graphic.display);
-	printf("DISPLAY: %p\n", game->graphic.display);
+	game->graphic.display = NULL;
+	list_free(game->to_turns);
+	printf("yo: %p\n", game->to_turns);
+	/*list_free(game->player);*/
 	trace_log(INFO, "Window closed succesfully");
 }
