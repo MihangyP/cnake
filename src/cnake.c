@@ -165,8 +165,8 @@ void	render(t_game *game)
 			/* --------------- */
 
 			if (game->state.paused) {
-				draw_pause_icon(game, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 - 20}, (t_vector2){W_WIDTH/2 - 20, W_HEIGHT/2 + 20},
-						(t_vector2){W_WIDTH/2 + 20, W_HEIGHT/2}, DONTOWHITE);
+				draw_rectangle(game, (t_vector2){W_WIDTH/2 - 10, W_HEIGHT/2 - 10}, (t_vector2){10, 30}, DONTOWHITE);
+				draw_rectangle(game, (t_vector2){W_WIDTH/2 + 10, W_HEIGHT/2 - 10}, (t_vector2){10, 30}, DONTOWHITE);
 			}
 		} else {
 			// TODO: implement a cool dead screen instead of just text
