@@ -10,8 +10,13 @@ void	handle_events(t_game *game)
 		KeySym keysym = XLookupKeysym(&event.xkey, 0);
 		if (keysym == XK_Escape)
 			game->state.window_should_close = true;
-		else if (game->state.started && !game->state.dead && keysym == XK_space)
+		else if (game->state.started && !game->state.dead && keysym == XK_space) {
 			game->state.paused = !game->state.paused;
+			if (game->state.paused)
+				ma_engine_play_sound(&game->sound.engine, "./resources/pause.mp3", NULL);
+			else
+				ma_engine_play_sound(&game->sound.engine, "./resources/unpause.mp3", NULL);
+		}
 		else if (!game->state.started && keysym == XK_Return) {
 			game->state.started = true;
 		} else if (game->state.started && !game->state.dead && !game->state.paused) {
